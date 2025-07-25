@@ -4,6 +4,14 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
+    // Handle build-time scenario where database isn't available
+    if (!prisma) {
+      return NextResponse.json({ 
+        error: 'Database not available during build', 
+        success: false 
+      }, { status: 503 })
+    }
+
     const { email, oldUserData } = await request.json()
     
     if (!email) {

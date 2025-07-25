@@ -5,10 +5,14 @@ declare global {
   var prisma: PrismaClient | undefined
 }
 
-export const prisma =
-  global.prisma ??
-  new PrismaClient({
-    log: ['query', 'error'], // Affiche chaque SQL exécuté
-  })
+// Check if we're in a build environment without database access
+const isDuringBuild = process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL
 
-if (process.env.NODE_ENV !== 'production') global.prisma = prisma
+export const prisma = isDuringBuild 
+  ? null 
+  : (global.prisma ??
+    new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['query', 'error'] : ['error'],
+    }))
+
+if (process.env.NODE_ENV !== 'production' && prisma) global.prisma = prisma
