@@ -9,15 +9,9 @@ export default function HealthPage() {
   const babyId = "user-1753219621644_baby_1"
 
   return (
-    <AppLayout>
+    <AppLayout currentPage="Santé" showHeader={true}>
       <div className="p-4 pb-24">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Santé
-            </h1>
-          </div>
-
           <HealthDashboard babyId={babyId} />
         </div>
       </div>

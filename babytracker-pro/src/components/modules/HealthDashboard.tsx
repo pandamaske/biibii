@@ -39,7 +39,7 @@ interface HealthDashboardProps {
 }
 
 const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'vaccines' | 'symptoms' | 'medications' | 'milestones' | 'postpartum' | 'emergency'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'vaccines' | 'symptoms' | 'medications' | 'milestones' | 'emergency'>('overview')
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const [showQuickNav, setShowQuickNav] = useState(false)
@@ -70,7 +70,6 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
     { id: 'symptoms' as const, icon: Stethoscope, label: 'Symptômes' },
     { id: 'medications' as const, icon: Pill, label: 'Médicaments' },
     { id: 'milestones' as const, icon: Brain, label: 'Développement' },
-    { id: 'postpartum' as const, icon: User, label: 'Parent' },
     { id: 'emergency' as const, icon: ShieldAlert, label: 'Urgence' },
   ]
 
@@ -767,18 +766,6 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
             )}
           </div>
         )
-      case 'postpartum':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">
-              Santé post-partum
-            </h3>
-            <div className="text-center text-gray-500 dark:text-gray-400 py-12">
-              <User className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p>Module post-partum en développement</p>
-            </div>
-          </div>
-        )
       case 'emergency':
         return (
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
@@ -902,7 +889,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
       onTouchEnd={onTouchEnd}
     >
       {/* Enhanced Tab Navigation */}
-      <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-sm border border-gray-100 dark:border-gray-700" data-quick-nav>
+      <div className="relative bg-white dark:bg-gray-800 rounded-2xl pt-6 pb-3 px-3 shadow-sm border border-gray-100 dark:border-gray-700" data-quick-nav>
         {/* Floating menu button */}
         <button
           onClick={() => setShowQuickNav(!showQuickNav)}
@@ -911,7 +898,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
           <Menu className="w-4 h-4" />
         </button>
         
-        <div className="flex overflow-x-auto space-x-1 scrollbar-hide">
+        <div className="flex overflow-x-auto space-x-2 scrollbar-hide">
           {healthTabs.map((tab) => {
             const isActive = activeTab === tab.id
             
@@ -934,7 +921,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center space-x-2 px-3 py-2 rounded-xl whitespace-nowrap transition-all duration-200 flex-shrink-0 group ${
+                className={`relative flex items-center space-x-2 px-4 py-3 rounded-xl whitespace-nowrap transition-all duration-200 flex-shrink-0 group ${
                   isActive
                     ? 'bg-primary-500 text-white shadow-md scale-105'
                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200'
@@ -949,7 +936,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
                 
                 {/* Badge indicator */}
                 {badgeCount > 0 && (
-                  <div className={`absolute -top-1 -right-1 ${badgeColor} text-white text-xs rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm`}>
+                  <div className={`absolute -top-2 -right-2 ${badgeColor} text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shadow-lg font-semibold border-2 border-white`}>
                     {badgeCount > 9 ? '9+' : badgeCount}
                   </div>
                 )}

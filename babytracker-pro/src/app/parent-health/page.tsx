@@ -315,23 +315,53 @@ export default function ParentHealthPage() {
   }
 
   // ✅ Save mood entry with psychological insights
-  const saveMoodEntry = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0]
-    const moodData = getLocalStorageItem('parent-mood-data', {})
+  const saveMoodEntry = useCallback(async () => {
+    if (!userProfile?.email) return
     
-    moodData[today] = {
-      ...currentMoodEntry,
-      timestamp: new Date().toISOString(),
-      baby_age_weeks: currentBaby ? Math.floor((new Date().getTime() - new Date((currentBaby as any).birthDate).getTime()) / (1000 * 60 * 60 * 24 * 7)) : 0
+    try {
+      const response = await fetch('/api/parent-health/mood', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userEmail: userProfile.email,
+          energy: currentMoodEntry.energy,
+          mood: currentMoodEntry.mood,
+          stress: currentMoodEntry.stress,
+          confidence: currentMoodEntry.confidence,
+          notes: currentMoodEntry.notes,
+          sleepHours: currentMoodEntry.sleep_hours,
+          stressFactors: currentMoodEntry.stress_factors,
+          positiveMoments: currentMoodEntry.positive_moments
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Mood entry saved:', data)
+        
+        // Also save to localStorage for offline access
+        const today = new Date().toISOString().split('T')[0]
+        const moodData = getLocalStorageItem('parent-mood-data', {})
+        
+        (moodData as any)[today] = {
+          ...currentMoodEntry,
+          timestamp: new Date().toISOString(),
+          baby_age_weeks: currentBaby ? Math.floor((new Date().getTime() - new Date((currentBaby as any).birthDate).getTime()) / (1000 * 60 * 60 * 24 * 7)) : 0
+        }
+        
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('parent-mood-data', JSON.stringify(moodData))
+        }
+        
+        // ✅ Trigger analysis and recommendations
+        analyzeWellbeingTrends(moodData)
+      }
+    } catch (error) {
+      console.error('Error saving mood entry:', error)
     }
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('parent-mood-data', JSON.stringify(moodData))
-    }
-    
-    // ✅ Trigger analysis and recommendations
-    analyzeWellbeingTrends(moodData)
-  }, [currentMoodEntry, currentBaby])
+  }, [currentMoodEntry, currentBaby, userProfile?.email])
 
   // ✅ Psychological trend analysis with clinical insights
   const analyzeWellbeingTrends = (moodData: any) => {
@@ -363,6 +393,54 @@ export default function ParentHealthPage() {
     // Integration with notification system
     console.log(`Alert: ${type} - ${message}`)
   }
+
+  // ✅ Save recovery progress to database
+  const saveRecoveryProgress = useCallback(async (newProgress: any) => {
+    if (!userProfile?.email) return
+    
+    try {
+      const response = await fetch('/api/parent-health/recovery', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userEmail: userProfile.email,
+          recoveryItems: newProgress
+        })
+      })
+      
+      if (response.ok) {
+        console.log('Recovery progress saved')
+      }
+    } catch (error) {
+      console.error('Error saving recovery progress:', error)
+    }
+  }, [userProfile?.email])
+
+  // ✅ Save self-care goals to database
+  const saveSelfCareGoals = useCallback(async (newGoals: any) => {
+    if (!userProfile?.email) return
+    
+    try {
+      const response = await fetch('/api/parent-health/goals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userEmail: userProfile.email,
+          goals: newGoals
+        })
+      })
+      
+      if (response.ok) {
+        console.log('Self-care goals saved')
+      }
+    } catch (error) {
+      console.error('Error saving self-care goals:', error)
+    }
+  }, [userProfile?.email])
 
   // ✅ Recovery progress calculation
   const calculateRecoveryScore = useMemo(() => {
@@ -492,6 +570,7 @@ export default function ParentHealthPage() {
                           }
                           (newGoals as any)[goal.id].completed = !(newGoals as any)[goal.id].completed
                           setSelfCareGoals(newGoals)
+                          saveSelfCareGoals(newGoals)
                         }}
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                           (selfCareGoals as any)[goal.id]?.completed
@@ -614,7 +693,7 @@ export default function ParentHealthPage() {
   // ✅ Render comprehensive dashboard
   const renderDashboard = () => {
     const today = new Date().toISOString().split('T')[0]
-    const todayMood = getLocalStorageItem('parent-mood-data', {})[today] || null
+    const todayMood = (getLocalStorageItem('parent-mood-data', {}) as any)[today] || null
     
     return (
       <div className="space-y-6">
@@ -794,6 +873,7 @@ export default function ParentHealthPage() {
                         const newProgress: any = { ...(recoveryProgress as any) }
                         newProgress[item.id] = !newProgress[item.id]
                         setRecoveryProgress(newProgress)
+                        saveRecoveryProgress(newProgress)
                       }}
                       className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                         (recoveryProgress as any)[item.id]
@@ -837,38 +917,62 @@ export default function ParentHealthPage() {
       currentPage="Santé Parentale"
       showHeader={true}
     >
-      <div className="p-6 space-y-8">
-        {/* Header with navigation */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Santé Parentale
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Votre bien-être est essentiel pour votre famille
-            </p>
-          </div>
-          
-          <div className="flex space-x-2">
+      <div className="p-4 pb-24 space-y-6">
+        {/* Enhanced Tab Navigation */}
+        <div className="relative bg-white dark:bg-gray-800 rounded-2xl pt-6 pb-3 px-3 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="flex overflow-x-auto space-x-2 scrollbar-hide">
             {[
               { key: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
               { key: 'mood', label: 'Humeur', icon: Heart },
               { key: 'recovery', label: 'Récupération', icon: Activity },
               { key: 'goals', label: 'Objectifs', icon: Target },
               { key: 'resources', label: 'Ressources', icon: BookOpen }
-            ].map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => setActiveView(key)}
-                className={`px-4 py-2 rounded-xl font-medium transition-all flex items-center space-x-2 ${
-                  activeView === key
-                    ? 'bg-purple-500 text-white shadow-lg'
-                    : 'bg-white/80 text-gray-600 hover:bg-gray-50'
+            ].map(({ key, label, icon: Icon }) => {
+              const isActive = activeView === key
+              
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveView(key)}
+                  className={`relative flex items-center space-x-2 px-4 py-3 rounded-xl whitespace-nowrap transition-all duration-200 flex-shrink-0 group ${
+                    isActive
+                      ? 'bg-primary-500 text-white shadow-md scale-105'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 transition-all duration-200 ${
+                    isActive 
+                      ? 'text-white' 
+                      : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
+                  }`} />
+                  <span className="text-sm font-medium">{label}</span>
+                  
+                  {/* Active indicator dot */}
+                  {isActive && (
+                    <div className="w-1 h-1 bg-white rounded-full opacity-75"></div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          
+          {/* Tab Progress Indicator */}
+          <div className="flex justify-center mt-3 space-x-1">
+            {[
+              { key: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
+              { key: 'mood', label: 'Humeur', icon: Heart },
+              { key: 'recovery', label: 'Récupération', icon: Activity },
+              { key: 'goals', label: 'Objectifs', icon: Target },
+              { key: 'resources', label: 'Ressources', icon: BookOpen }
+            ].map((tab, index) => (
+              <div 
+                key={tab.key}
+                className={`w-2 h-1 rounded-full transition-all duration-300 ${
+                  activeView === tab.key 
+                    ? 'bg-primary-500 w-8' 
+                    : 'bg-gray-200 dark:bg-gray-600'
                 }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="hidden md:inline">{label}</span>
-              </button>
+              />
             ))}
           </div>
         </div>

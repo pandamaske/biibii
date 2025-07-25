@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import ClientOnly from '@/components/ClientOnly'
+import { MilestoneTrackingModal } from '@/components/health'
 
 // ✅ Helper functions EXTERNES pour éviter les problèmes de hooks
 const ensureDate = (value: any): Date | null => {
@@ -605,6 +606,9 @@ export default function AdvancedGrowthPage() {
   const [teethSymptoms, setTeethSymptoms] = useState({
     fever: false, drooling: false, irritability: false, sleepIssues: false
   })
+  const [milestones, setMilestones] = useState<any[]>([])
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false)
+  const [editingMilestone, setEditingMilestone] = useState<any>(null)
 
   // ✅ Store hook
   const { 
@@ -629,10 +633,28 @@ export default function AdvancedGrowthPage() {
     initializeData()
   }, [initializeData, initializeProfile])
 
+  // ✅ Load milestones from database
+  const loadMilestones = useCallback(async () => {
+    if (!currentBaby?.id) return
+    
+    try {
+      const response = await fetch(`/api/health/milestones?babyId=${currentBaby.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setMilestones(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error('Error loading milestones:', error)
+    }
+  }, [currentBaby?.id])
+
   useEffect(() => {
     if (currentBaby) {
       const entries = getGrowthEntries(currentBaby.id)
       setGrowthEntries(entries)
+      
+      // Load milestones from database
+      loadMilestones()
       
       // Add birth entry if no entries exist
       if (entries.length === 0) {
@@ -648,7 +670,7 @@ export default function AdvancedGrowthPage() {
         setGrowthEntries([birthEntry])
       }
     }
-  }, [currentBaby, getGrowthEntries, addGrowthEntry])
+  }, [currentBaby, getGrowthEntries, addGrowthEntry, loadMilestones])
 
   // ✅ TOUS les useCallback
   const handleAddMeasurement = useCallback(async () => {
@@ -773,6 +795,64 @@ export default function AdvancedGrowthPage() {
     }
   }, [teethStatus, currentBaby])
 
+  const handleSaveMilestone = useCallback(async (milestoneData: any) => {
+    if (!currentBaby?.id) return
+
+    try {
+      const isEditing = editingMilestone && editingMilestone.id
+      
+      // Save to database via API
+      const response = await fetch('/api/health/milestones', {
+        method: isEditing ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...(isEditing && { id: editingMilestone.id }),
+          babyId: currentBaby.id,
+          ...milestoneData
+        })
+      })
+
+      if (response.ok) {
+        const savedMilestone = await response.json()
+        
+        // Update local state
+        if (isEditing) {
+          setMilestones(prev => prev.map(m => m.id === savedMilestone.id ? savedMilestone : m))
+        } else {
+          setMilestones(prev => [...prev, savedMilestone])
+        }
+        
+        setShowMilestoneModal(false)
+        setEditingMilestone(null)
+
+        // Log activity
+        try {
+          await babyTrackerDB.logActivity({
+            id: `milestone-${Date.now()}`,
+            type: 'growth',
+            action: isEditing ? 'milestone_updated' : 'milestone_added',
+            babyId: currentBaby.id,
+            timestamp: new Date(),
+            data: savedMilestone
+          })
+        } catch (error) {
+          console.warn('Failed to log milestone activity:', error)
+        }
+      } else {
+        console.error('Failed to save milestone to database')
+      }
+    } catch (error) {
+      console.error('Error saving milestone:', error)
+    }
+  }, [currentBaby, editingMilestone])
+
+  const handleCloseMilestoneModal = useCallback(() => {
+    setShowMilestoneModal(false)
+    setEditingMilestone(null)
+  }, [])
+
   const calculateGrowthVelocity = useCallback(() => {
     if (growthEntries.length < 2) return null
     
@@ -891,31 +971,6 @@ export default function AdvancedGrowthPage() {
           </div>
         </div>
 
-        {/* ✅ Courbes de croissance WHO */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <GrowthChart 
-            type="weight"
-            data={growthEntries}
-            percentiles={GROWTH_PERCENTILES.weight}
-            currentValue={currentBaby.weight}
-            ageInWeeks={ageInWeeks}
-          />
-          <GrowthChart 
-            type="height"
-            data={growthEntries}
-            percentiles={GROWTH_PERCENTILES.height}
-            currentValue={currentBaby.height}
-            ageInWeeks={ageInWeeks}
-          />
-        </div>
-
-        {/* ✅ Schéma dentaire interactif */}
-        <TeethDiagram 
-          teethStatus={teethStatus}
-          onToothClick={handleToothClick}
-          ageInMonths={ageInMonths}
-        />
-
         {/* ✅ Indicateurs de croissance avancés */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="glass-card rounded-3xl p-6 shadow-large border border-gray-100">
@@ -998,6 +1053,128 @@ export default function AdvancedGrowthPage() {
                 ))}
             </div>
           </div>
+        </div>
+
+        {/* ✅ Courbes de croissance WHO */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <GrowthChart 
+            type="weight"
+            data={growthEntries}
+            percentiles={GROWTH_PERCENTILES.weight}
+            currentValue={currentBaby.weight}
+            ageInWeeks={ageInWeeks}
+          />
+          <GrowthChart 
+            type="height"
+            data={growthEntries}
+            percentiles={GROWTH_PERCENTILES.height}
+            currentValue={currentBaby.height}
+            ageInWeeks={ageInWeeks}
+          />
+        </div>
+
+        {/* ✅ Schéma dentaire interactif */}
+        <TeethDiagram 
+          teethStatus={teethStatus}
+          onToothClick={handleToothClick}
+          ageInMonths={ageInMonths}
+        />
+
+        {/* ✅ Étapes de développement détaillées */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Étapes de développement
+            </h3>
+            <button 
+              onClick={() => {
+                setEditingMilestone(null)
+                setShowMilestoneModal(true)
+              }}
+              className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors flex items-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Évaluer étape
+            </button>
+          </div>
+          
+          {milestones.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {['motor', 'cognitive', 'language', 'social', 'adaptive'].map(category => {
+                const categoryMilestones = milestones.filter((m: any) => m.category === category)
+                const achievedCount = categoryMilestones.filter((m: any) => m.achieved).length
+                const progress = categoryMilestones.length > 0 ? (achievedCount / categoryMilestones.length) * 100 : 0
+                
+                return (
+                  <div key={category} className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-900 capitalize">
+                        {category === 'motor' ? 'Moteur' :
+                         category === 'cognitive' ? 'Cognitif' :
+                         category === 'language' ? 'Langage' :
+                         category === 'social' ? 'Social' :
+                         'Adaptatif'}
+                      </h4>
+                      <span className="text-sm text-gray-600">
+                        {achievedCount}/{categoryMilestones.length}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      ></div>
+                    </div>
+                    
+                    {/* Show individual milestones for this category */}
+                    <div className="mt-3 space-y-2">
+                      {categoryMilestones.slice(0, 3).map((milestone: any, index: number) => (
+                        <div 
+                          key={index} 
+                          className={`p-2 rounded-lg text-sm cursor-pointer hover:opacity-80 transition-opacity ${
+                            milestone.achieved 
+                              ? 'bg-green-50 text-green-800' 
+                              : 'bg-amber-50 text-amber-800'
+                          }`}
+                          onClick={() => {
+                            setEditingMilestone(milestone)
+                            setShowMilestoneModal(true)
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{milestone.milestone}</span>
+                            <span className="text-xs">
+                              {milestone.achieved ? '✅' : '⏳'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      {categoryMilestones.length > 3 && (
+                        <div className="text-xs text-gray-500 text-center">
+                          +{categoryMilestones.length - 3} autres étapes
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500 py-12">
+              <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
+              <p>Aucune étape de développement enregistrée</p>
+              <p className="text-sm mb-4">Commencez à suivre le développement de votre bébé</p>
+              <button 
+                onClick={() => {
+                  setEditingMilestone(null)
+                  setShowMilestoneModal(true)
+                }}
+                className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+              >
+                Évaluer première étape
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ✅ Actions et formulaires */}
@@ -1233,6 +1410,19 @@ export default function AdvancedGrowthPage() {
           onClose={handleCloseModal}
           onSave={handleSaveEditedEntry}
         />
+
+        {/* ✅ Modal des étapes de développement */}
+        {showMilestoneModal && currentBaby && (
+          <MilestoneTrackingModal
+            isOpen={showMilestoneModal}
+            onClose={handleCloseMilestoneModal}
+            onSave={handleSaveMilestone}
+            babyBirthDate={new Date(currentBaby.birthDate)}
+            currentMilestones={milestones}
+            initialData={editingMilestone}
+            isLoading={false}
+          />
+        )}
       </div>
     </AppLayout>
   )
