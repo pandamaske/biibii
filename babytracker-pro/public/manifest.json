@@ -1,0 +1,10 @@
+{ 
+  "name": "BabyTracker Pro", 
+  "short_name": "BabyTracker", 
+  "description": "Suivi complet pour bebes et jeunes parents", 
+  "start_url": "/", 
+  "display": "standalone", 
+  "background_color": "#F0FDF4", 
+  "theme_color": "#10B981", 
+  "orientation": "portrait-primary" 
+} 

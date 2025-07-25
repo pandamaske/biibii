@@ -1,0 +1,562 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String         @id @default(cuid())
+  email             String         @unique
+  firstName         String
+  lastName          String
+  avatar            String?
+  role              String         @default("mother")
+  preferredName     String?
+  timezone          String         @default("Europe/Paris")
+  language          String         @default("fr")
+  phone             String?
+  isEmailVerified   Boolean        @default(false)
+  isPhoneVerified   Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  emergencyContact  Json?
+  activityLogs      ActivityLog[]
+  babies            Baby[]
+  diaperEntries     DiaperEntry[]
+  familyMemberships FamilyMember[]
+  feedingEntries    FeedingEntry[]
+  sleepEntries      SleepEntry[]
+  settings          UserSettings?
+
+  @@map("users")
+}
+
+model Baby {
+  id                      String                    @id @default(cuid())
+  name                    String
+  birthDate               DateTime
+  gender                  String
+  weight                  Int
+  height                  Int
+  avatar                  String                    @default("👶")
+  userId                  String
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  user                    User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  diaperEntries           DiaperEntry[]
+  feedingEntries          FeedingEntry[]
+  growthEntries           GrowthEntry[]
+  sleepEntries            SleepEntry[]
+  teethStatus             ToothStatus[]
+  // Health-related relations
+  appointments            Appointment[]
+  vaccineEntries          VaccineEntry[]
+  symptomEntries          SymptomEntry[]
+  medicationEntries       MedicationEntry[]
+  developmentalMilestones DevelopmentalMilestone[]
+
+  @@map("babies")
+}
+
+model FeedingEntry {
+  id        String    @id @default(cuid())
+  babyId    String
+  userId    String
+  type      String
+  amount    Int?
+  startTime DateTime
+  endTime   DateTime?
+  duration  Int?
+  mood      String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  baby      Baby      @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feeding_entries")
+}
+
+model SleepEntry {
+  id        String    @id @default(cuid())
+  babyId    String
+  userId    String
+  startTime DateTime
+  endTime   DateTime?
+  duration  Int?
+  quality   String?
+  type      String?
+  location  String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  baby      Baby      @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sleep_entries")
+}
+
+model DiaperEntry {
+  id        String   @id @default(cuid())
+  babyId    String
+  userId    String
+  time      DateTime
+  type      String   // 'wet', 'soiled', 'mixed', 'dry'
+  
+  // Wetness details (JSON)
+  wetness   Json?    // { level, color }
+  
+  // Stool details (JSON) 
+  stool     Json?    // { consistency, color, amount, texture }
+  
+  // Diaper info (JSON)
+  diaper    Json?    // { size, leaked, rash }
+  
+  // Additional fields
+  mood      String?  // 'comfortable', 'fussy', 'crying'
+  changedBy String?
+  notes     String?
+  
+  // Legacy fields (keep for backward compatibility)
+  amount    String?
+  color     String?
+  leaked    String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  baby      Baby     @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("diaper_entries")
+}
+
+model GrowthEntry {
+  id        String   @id @default(cuid())
+  babyId    String
+  date      DateTime
+  weight    Int?
+  height    Int?
+  headCirc  Int?
+  notes     String?
+  createdAt DateTime @default(now())
+  baby      Baby     @relation(fields: [babyId], references: [id], onDelete: Cascade)
+
+  @@map("growth_entries")
+}
+
+model ToothStatus {
+  id           String    @id @default(cuid())
+  babyId       String
+  toothId      String
+  hasErupted   Boolean   @default(false)
+  eruptionDate DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  baby         Baby      @relation(fields: [babyId], references: [id], onDelete: Cascade)
+
+  @@unique([babyId, toothId])
+  @@map("tooth_status")
+}
+
+model FamilyMember {
+  id           String    @id @default(cuid())
+  userId       String
+  email        String
+  name         String
+  role         String
+  inviteStatus String    @default("pending")
+  permissions  Json
+  invitedAt    DateTime  @default(now())
+  joinedAt     DateTime?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("family_members")
+}
+
+model UserSettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  theme           String   @default("light")
+  colorScheme     String   @default("green")
+  fontSize        String   @default("medium")
+  language        String   @default("fr")
+  dateFormat      String   @default("DD/MM/YYYY")
+  timeFormat      String   @default("24h")
+  weightUnit      String   @default("grams")
+  heightUnit      String   @default("cm")
+  temperatureUnit String   @default("celsius")
+  volumeUnit      String   @default("ml")
+  notifications   Json
+  privacy         Json
+  backup          Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  babyId    String?
+  action    String
+  data      Json?
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activity_logs")
+}
+
+model Backup {
+  id        String   @id @default(cuid())
+  userId    String
+  filename  String
+  size      Int
+  data      Json
+  createdAt DateTime @default(now())
+
+  @@map("backups")
+}
+
+// ===== HEALTH MODULE MODELS =====
+
+model HealthcareProvider {
+  id           String        @id @default(cuid())
+  name         String
+  type         String        // 'pediatrician', 'emergency', 'specialist', 'urgent_care'
+  phone        String
+  email        String?
+  address      String?
+  hours        String?
+  distance     String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
+
+  @@map("healthcare_providers")
+}
+
+model EmergencyContact {
+  id           String  @id @default(cuid())
+  userId       String
+  name         String
+  relationship String
+  phone        String
+  email        String?
+  isDefault    Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("emergency_contacts")
+}
+
+model InsuranceDetails {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  provider       String
+  memberId       String
+  groupNumber    String
+  copay          String
+  deductible     String?
+  effectiveDate  DateTime
+  expirationDate DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("insurance_details")
+}
+
+model Appointment {
+  id         String            @id @default(cuid())
+  babyId     String
+  providerId String
+  type       String
+  date       DateTime
+  duration   Int               @default(30) // minutes
+  status     String            @default("scheduled") // 'scheduled', 'completed', 'cancelled', 'rescheduled'
+  notes      String?
+  reminders  Json? // Array of reminder times
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  baby       Baby              @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  provider   HealthcareProvider @relation(fields: [providerId], references: [id])
+
+  @@map("appointments")
+}
+
+model VaccineEntry {
+  id            String    @id @default(cuid())
+  babyId        String
+  name          String
+  status        String    @default("upcoming") // 'completed', 'due', 'upcoming', 'overdue'
+  scheduledDate DateTime?
+  completedDate DateTime?
+  location      String?
+  batchNumber   String?
+  reactions     String?
+  notes         String?
+  ageGroup      String? // '0-2months', '4months', etc.
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  baby          Baby      @relation(fields: [babyId], references: [id], onDelete: Cascade)
+
+  @@map("vaccine_entries")
+}
+
+model SymptomEntry {
+  id                String         @id @default(cuid())
+  babyId            String
+  date              DateTime
+  temperature       Float?
+  temperatureUnit   String         @default("celsius")
+  notes             String
+  doctorContacted   Boolean        @default(false)
+  followUpRequired  Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  baby              Baby           @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  symptoms          Symptom[]
+  photos            SymptomPhoto[]
+  medications       MedicationDose[]
+
+  @@map("symptom_entries")
+}
+
+model Symptom {
+  id              String       @id @default(cuid())
+  symptomEntryId  String
+  name            String
+  category        String       // 'fever', 'digestive', 'respiratory', 'skin', 'behavioral', 'other'
+  severity        String       // 'mild', 'moderate', 'severe'
+  icon            String?
+  createdAt       DateTime     @default(now())
+  symptomEntry    SymptomEntry @relation(fields: [symptomEntryId], references: [id], onDelete: Cascade)
+
+  @@map("symptoms")
+}
+
+model SymptomPhoto {
+  id              String       @id @default(cuid())
+  symptomEntryId  String
+  url             String
+  bodyPart        String
+  notes           String?
+  createdAt       DateTime     @default(now())
+  symptomEntry    SymptomEntry @relation(fields: [symptomEntryId], references: [id], onDelete: Cascade)
+
+  @@map("symptom_photos")
+}
+
+model Medication {
+  id               String            @id @default(cuid())
+  name             String
+  type             String            // 'pain_reliever', 'antibiotic', 'vitamin', 'prescription', 'other'
+  activeIngredient String
+  concentration    String
+  form             String            // 'liquid', 'tablet', 'drops', 'suppository'
+  createdAt        DateTime          @default(now())
+  entries          MedicationEntry[]
+
+  @@map("medications")
+}
+
+model MedicationEntry {
+  id           String           @id @default(cuid())
+  babyId       String
+  medicationId String
+  dosage       Float
+  unit         String           // 'ml', 'mg', 'drops'
+  frequency    String
+  startDate    DateTime
+  endDate      DateTime?
+  prescribedBy String?
+  notes        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  baby         Baby             @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  medication   Medication       @relation(fields: [medicationId], references: [id])
+  doses        MedicationDose[]
+
+  @@map("medication_entries")
+}
+
+model MedicationDose {
+  id                String            @id @default(cuid())
+  medicationEntryId String?
+  symptomEntryId    String?
+  dosage            Float
+  unit              String            // 'ml', 'mg', 'drops'
+  time              DateTime
+  createdAt         DateTime          @default(now())
+  medicationEntry   MedicationEntry?  @relation(fields: [medicationEntryId], references: [id], onDelete: Cascade)
+  symptomEntry      SymptomEntry?     @relation(fields: [symptomEntryId], references: [id], onDelete: Cascade)
+
+  @@map("medication_doses")
+}
+
+model DevelopmentalMilestone {
+  id           String    @id @default(cuid())
+  babyId       String
+  category     String    // 'motor', 'cognitive', 'language', 'social', 'adaptive'
+  milestone    String
+  description  String
+  minWeeks     Int       // minimum age in weeks
+  maxWeeks     Int       // maximum age in weeks
+  achieved     Boolean   @default(false)
+  achievedDate DateTime?
+  photos       Json?     // Array of photo URLs
+  video        String?
+  notes        String?
+  concerns     Json?     // Array of concern strings
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  baby         Baby      @relation(fields: [babyId], references: [id], onDelete: Cascade)
+
+  @@map("developmental_milestones")
+}
+
+model ParentHealthProfile {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  deliveryType   String    // 'vaginal', 'cesarean'
+  deliveryDate   DateTime
+  complications  Json?     // Array of complication strings
+  conditions     Json?     // Array of current condition strings
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  recoveryData   PhysicalRecovery[]
+  mentalHealth   MentalHealthTracking[]
+  breastfeeding  BreastfeedingHealth[]
+
+  @@map("parent_health_profiles")
+}
+
+model PhysicalRecovery {
+  id                String              @id @default(cuid())
+  parentProfileId   String
+  date              DateTime            @default(now())
+  cSectionHealing   Boolean?
+  lochia            String              // 'heavy', 'moderate', 'light', 'none'
+  painLevel         Int                 // 1-10 scale
+  energyLevel       Int                 // 1-10 scale
+  sleepQuality      String              // 'excellent', 'good', 'poor', 'terrible'
+  createdAt         DateTime            @default(now())
+  parentProfile     ParentHealthProfile @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
+
+  @@map("physical_recovery")
+}
+
+model MentalHealthTracking {
+  id              String              @id @default(cuid())
+  parentProfileId String
+  date            DateTime            @default(now())
+  edpsScore       Int?                // Edinburgh Postnatal Depression Scale
+  anxietyLevel    Int                 // 1-10 scale
+  riskLevel       String              @default("low") // 'low', 'moderate', 'high'
+  createdAt       DateTime            @default(now())
+  parentProfile   ParentHealthProfile @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
+  moodEntries     MoodEntry[]
+
+  @@map("mental_health_tracking")
+}
+
+model MoodEntry {
+  id                     String               @id @default(cuid())
+  mentalHealthTrackingId String
+  date                   DateTime             @default(now())
+  mood                   String               // 'excellent', 'good', 'okay', 'low', 'very_low'
+  anxietyLevel           Int                  // 1-10 scale
+  stressFactors          Json?                // Array of stress factor strings
+  copingStrategies       Json?                // Array of coping strategy strings
+  notes                  String?
+  createdAt              DateTime             @default(now())
+  mentalHealthTracking   MentalHealthTracking @relation(fields: [mentalHealthTrackingId], references: [id], onDelete: Cascade)
+
+  @@map("mood_entries")
+}
+
+model BreastfeedingHealth {
+  id               String              @id @default(cuid())
+  parentProfileId  String
+  date             DateTime            @default(now())
+  nippleHealth     String              // 'healthy', 'sore', 'cracked', 'bleeding', 'healing'
+  supplyLevel      String              // 'oversupply', 'adequate', 'low', 'very_low'
+  pumpOutput       Json?               // Array of pump output numbers (ml)
+  supplements      Json?               // Array of supplement strings
+  concerns         Json?               // Array of concern strings
+  mastitisRisk     Boolean             @default(false)
+  createdAt        DateTime            @default(now())
+  parentProfile    ParentHealthProfile @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
+
+  @@map("breastfeeding_health")
+}
+
+model FirstAidGuide {
+  id              String   @id @default(cuid())
+  title           String
+  type            String   // 'video', 'interactive', 'article', 'checklist'
+  duration        String?
+  content         String   @db.Text
+  steps           Json?    // Array of step strings
+  emergencyNumber String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("first_aid_guides")
+}
+
+model SafetyChecklistItem {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  category     String   // 'crib_safety', 'home_safety', 'car_safety', 'water_safety'
+  minWeeks     Int      // minimum age in weeks
+  maxWeeks     Int      // maximum age in weeks
+  checked      Boolean  @default(false)
+  priority     String   @default("medium") // 'high', 'medium', 'low'
+  instructions String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("safety_checklist_items")
+}
+
+model ProductRecall {
+  id             String   @id @default(cuid())
+  productName    String
+  brand          String
+  modelNumber    String
+  severity       String   // 'high', 'medium', 'low'
+  description    String   @db.Text
+  actionRequired String   @db.Text
+  recallDate     DateTime
+  url            String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("product_recalls")
+}
+
+model HealthAlert {
+  id             String   @id @default(cuid())
+  babyId         String
+  type           String   // 'vaccine_due', 'appointment_reminder', 'medication_reminder', 'milestone_check', 'emergency'
+  severity       String   // 'info', 'warning', 'urgent'
+  title          String
+  message        String   @db.Text
+  dueDate        DateTime?
+  actionRequired Boolean  @default(false)
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("health_alerts")
+}

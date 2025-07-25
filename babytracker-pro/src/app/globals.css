@@ -1,0 +1,267 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ───────────────────────────────────────────────
+   GLOBAL TOKENS
+   Keep these at the very top of globals.css
+   They power both the light (default) and forest themes.
+──────────────────────────────────────────────── */
+
+:root {
+  /* Light theme – existing palette ---------------- */
+  --primary-50 : #F0F9F7;
+  --primary-100: #D1F0E8;
+  --primary-200: #A7E1D3;
+  --primary-300: #7DD3BE;
+  --primary-400: #4FC4A8;
+  --primary-500: #28AF90; /* main brand green */
+  --primary-600: #1F8D73;
+  --primary-700: #176B56;
+  --primary-800: #0F4A3A;
+  --primary-900: #072C20;
+
+  /* Semantic aliases (light) */
+  --color-bg       : var(--primary-50);   /* page background   */
+  --color-surface  : #FFFFFF;             /* cards / sheets    */
+  --color-border   : rgb(0 0 0 / 8%);     /* subtle borders    */
+  --color-text     : #1E1E1E;             /* main copy         */
+  --color-heading  : var(--primary-700);  /* h1‑h3             */
+  --color-cta      : var(--primary-600);  /* buttons, sliders  */
+  --color-danger   : #E86465;             /* errors / delete   */
+}
+
+/* Dark mode overrides */
+.dark {
+  /* Semantic aliases (dark) */
+  --color-bg       : #111827;             /* dark page background   */
+  --color-surface  : #1F2937;             /* dark cards / sheets    */
+  --color-border   : rgb(255 255 255 / 10%); /* dark borders    */
+  --color-text     : #F9FAFB;             /* dark main copy         */
+  --color-heading  : var(--primary-300);  /* lighter green for dark */
+  --color-cta      : var(--primary-400);  /* lighter green for dark */
+  --color-danger   : #EF4444;             /* red for dark mode   */
+}
+
+/* ───────────────────────────────────────────────
+   FOREST THEME  🌲  (dark‑green + mint accent)
+   Toggle with <html data-theme="forest"> or
+   <body class="theme-forest"> – your choice.
+──────────────────────────────────────────────── */
+
+:root[data-theme="forest"],
+.theme-forest {
+  --forest-50 :  #D0ECE0;
+  --forest-100:  #9ED0B9;
+  --forest-200:  #6FA58D;
+  --forest-300:  #4A7A67;
+  --forest-400:  #35614E;
+  --forest-500:  #2A4A3B;  /* default background */
+  --forest-600:  #233E32;
+  --forest-700:  #1C3329;  /* cards, nav‑bars    */
+  --forest-800:  #14261F;
+  --forest-900:  #0F1B17;  /* overlays / true dark */
+
+  --mint-500   :  #55BE95; /* accent / CTA       */
+  --danger-500 :  #E86465; /* delete / error     */
+
+  /* Semantic aliases (forest) */
+  --color-bg       : var(--forest-500);
+  --color-surface  : var(--forest-700);
+  --color-border   : rgb(255 255 255 / 6%);
+  --color-text     : var(--forest-50);
+  --color-heading  : var(--mint-500);
+  --color-cta      : var(--mint-500);
+  --color-danger   : var(--danger-500);
+
+  /* Update primary variables for forest theme compatibility */
+  --primary-50: var(--forest-50);
+  --primary-100: var(--forest-100);
+  --primary-200: var(--forest-200);
+  --primary-300: var(--forest-300);
+  --primary-400: var(--forest-400);
+  --primary-500: var(--mint-500);
+  --primary-600: var(--forest-600);
+  --primary-700: var(--forest-700);
+  --primary-800: var(--forest-800);
+  --primary-900: var(--forest-900);
+}
+
+/* ───────────────────────────────────────────────
+   Utility glue – makes the tokens usable without
+   changing your existing Tailwind classes.
+──────────────────────────────────────────────── */
+
+/* backgrounds */
+.bg-surface   { background-color: var(--color-surface); }
+.bg-page      { background-color: var(--color-bg); }
+
+/* text colours */
+.text-copy    { color: var(--color-text); }
+.text-heading { color: var(--color-heading); }
+
+/* heading elements dark mode support */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-heading);
+}
+
+
+/* buttons / CTAs */
+.btn-primary {
+  @apply px-4 py-2 rounded-xl font-semibold shadow-md transition;
+  background-color: var(--color-cta);
+  color: white;
+}
+.btn-primary:hover { filter: brightness(1.10); }
+
+/* cards */
+.glass-card {
+  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,.20);          /* light theme   */
+  border: 1px solid rgba(255,255,255,.25);
+}
+.theme-forest .glass-card,
+:root[data-theme="forest"] .glass-card,
+.theme-pistacchio .glass-card {
+  background: rgba(20,38,31,.35);             /* darker blur   */
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+/* error badge */
+.badge-danger {
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs;
+  background: var(--color-danger);
+  color: #fff;
+}
+
+/* Color Scheme Classes - Legacy Support */
+.theme-green {
+  --primary-50: #F0F9F7;
+  --primary-100: #D1F0E8;
+  --primary-200: #A7E1D3;
+  --primary-300: #7DD3BE;
+  --primary-400: #4FC4A8;
+  --primary-500: #28AF90;
+  --primary-600: #1F8D73;
+  --primary-700: #176B56;
+  --primary-800: #0F4A3A;
+  --primary-900: #072C20;
+}
+
+.theme-blue {
+  --primary-50: theme('colors.blue.50');
+  --primary-100: theme('colors.blue.100');  
+  --primary-200: theme('colors.blue.200');
+  --primary-300: theme('colors.blue.300');
+  --primary-400: theme('colors.blue.400');
+  --primary-500: theme('colors.blue.500');
+  --primary-600: theme('colors.blue.600');
+  --primary-700: theme('colors.blue.700');
+  --primary-800: theme('colors.blue.800');
+  --primary-900: theme('colors.blue.900');
+}
+
+.theme-amber {
+  --primary-50: theme('colors.amber.50');
+  --primary-100: theme('colors.amber.100');  
+  --primary-200: theme('colors.amber.200');
+  --primary-300: theme('colors.amber.300');
+  --primary-400: theme('colors.amber.400');
+  --primary-500: theme('colors.amber.500');
+  --primary-600: theme('colors.amber.600');
+  --primary-700: theme('colors.amber.700');
+  --primary-800: theme('colors.amber.800');
+  --primary-900: theme('colors.amber.900');
+}
+
+.theme-pink {
+  --primary-50: theme('colors.pink.50');
+  --primary-100: theme('colors.pink.100');  
+  --primary-200: theme('colors.pink.200');
+  --primary-300: theme('colors.pink.300');
+  --primary-400: theme('colors.pink.400');
+  --primary-500: theme('colors.pink.500');
+  --primary-600: theme('colors.pink.600');
+  --primary-700: theme('colors.pink.700');
+  --primary-800: theme('colors.pink.800');
+  --primary-900: theme('colors.pink.900');
+}
+
+.theme-orange {
+  --primary-50: theme('colors.orange.50');
+  --primary-100: theme('colors.orange.100');  
+  --primary-200: theme('colors.orange.200');
+  --primary-300: theme('colors.orange.300');
+  --primary-400: theme('colors.orange.400');
+  --primary-500: theme('colors.orange.500');
+  --primary-600: theme('colors.orange.600');
+  --primary-700: theme('colors.orange.700');
+  --primary-800: theme('colors.orange.800');
+  --primary-900: theme('colors.orange.900');
+}
+
+/* New Pistacchio Forest Theme */
+.theme-pistacchio {
+  --forest-50 :  #D0ECE0;
+  --forest-100:  #9ED0B9;
+  --forest-200:  #6FA58D;
+  --forest-300:  #4A7A67;
+  --forest-400:  #35614E;
+  --forest-500:  #2A4A3B;
+  --forest-600:  #233E32;
+  --forest-700:  #1C3329;
+  --forest-800:  #14261F;
+  --forest-900:  #0F1B17;
+
+  --mint-500:  #55BE95;
+
+  --primary-50: var(--forest-50);
+  --primary-100: var(--forest-100);
+  --primary-200: var(--forest-200);
+  --primary-300: var(--forest-300);
+  --primary-400: var(--forest-400);
+  --primary-500: var(--mint-500);
+  --primary-600: var(--forest-600);
+  --primary-700: var(--forest-700);
+  --primary-800: var(--forest-800);
+  --primary-900: var(--forest-900);
+}
+
+/* Font Size Classes */
+.text-small {
+  font-size: 14px;
+}
+
+.text-small h1 { font-size: 1.75rem; }
+.text-small h2 { font-size: 1.5rem; }
+.text-small h3 { font-size: 1.25rem; }
+.text-small h4 { font-size: 1.125rem; }
+.text-small .text-base { font-size: 0.875rem; }
+.text-small .text-sm { font-size: 0.8125rem; }
+.text-small .text-xs { font-size: 0.75rem; }
+
+.text-medium {
+  font-size: 16px;
+}
+
+.text-large {
+  font-size: 18px;
+}
+
+.text-large h1 { font-size: 2.25rem; }
+.text-large h2 { font-size: 2rem; }
+.text-large h3 { font-size: 1.75rem; }
+.text-large h4 { font-size: 1.5rem; }
+.text-large .text-base { font-size: 1.125rem; }
+.text-large .text-sm { font-size: 1rem; }
+.text-large .text-xs { font-size: 0.875rem; }
+
+/* Scrollbar hiding utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
