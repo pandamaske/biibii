@@ -51,7 +51,9 @@ export default function HomePage() {
     
     try {
       // Store email for future lookups first
-      localStorage.setItem('user-email', email.trim())
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user-email', email.trim())
+      }
       
       // Call the user lookup/creation API directly
       const lookupResponse = await fetch('/api/user/lookup', {
@@ -283,19 +285,21 @@ export default function HomePage() {
   // Initialize data and update current time
   useEffect(() => {
     // Clean up any old default user data from localStorage
-    const storedEmail = localStorage.getItem('user-email')
+    const storedEmail = typeof window !== 'undefined' ? localStorage.getItem('user-email') : null
     if (storedEmail === 'nouveau.utilisateur@example.com') {
       console.log('Clearing old default user data')
-      localStorage.removeItem('user-email')
-      // Clear the entire babytracker storage to reset to clean state
-      localStorage.removeItem('babytracker-storage')
-      // Force page reload to start completely fresh
-      window.location.reload()
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user-email')
+        // Clear the entire babytracker storage to reset to clean state
+        localStorage.removeItem('babytracker-storage')
+        // Force page reload to start completely fresh
+        window.location.reload()
+      }
       return
     }
     
     // Check if there's a stored email and try to load profile
-    const validStoredEmail = localStorage.getItem('user-email')
+    const validStoredEmail = typeof window !== 'undefined' ? localStorage.getItem('user-email') : null
     if (validStoredEmail && validStoredEmail !== 'nouveau.utilisateur@example.com') {
       console.log('Found stored email, trying to load profile:', validStoredEmail)
       setEmail(validStoredEmail)

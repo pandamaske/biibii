@@ -121,7 +121,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     // Get email from localStorage (set by homepage)
-    const storedEmail = localStorage.getItem('user-email')
+    const storedEmail = typeof window !== 'undefined' ? localStorage.getItem('user-email') : null
     
     if (storedEmail) {
       console.log('Profile page loading for email:', storedEmail)

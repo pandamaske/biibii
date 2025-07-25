@@ -47,9 +47,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       applyFontSize(appSettings.fontSize);
     } else {
       // Fallback to localStorage and system preference
-      const savedTheme = localStorage.getItem('theme') as Theme | null;
-      const savedColorScheme = localStorage.getItem('colorScheme') || 'green';
-      const savedFontSize = localStorage.getItem('fontSize') || 'medium';
+      const savedTheme = typeof window !== 'undefined' ? localStorage.getItem('theme') as Theme | null : null;
+      const savedColorScheme = typeof window !== 'undefined' ? localStorage.getItem('colorScheme') || 'green' : 'green';
+      const savedFontSize = typeof window !== 'undefined' ? localStorage.getItem('fontSize') || 'medium' : 'medium';
       const initialTheme = savedTheme || 'auto';
       
       setThemeState(initialTheme);

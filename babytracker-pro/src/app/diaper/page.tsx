@@ -109,7 +109,7 @@ export default function DiaperPage() {
 
   useEffect(() => {
     // Check for stored email and initialize profile from database
-    const storedEmail = localStorage.getItem('user-email')
+    const storedEmail = typeof window !== 'undefined' ? localStorage.getItem('user-email') : null
     if (storedEmail && storedEmail !== 'nouveau.utilisateur@example.com') {
       console.log('Diaper page: initializing profile for email:', storedEmail)
       initializeProfile(storedEmail)

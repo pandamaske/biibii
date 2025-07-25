@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useBabyTrackerStore } from '@/lib/store'
 import AppLayout from '@/components/layout/AppLayout'
 import BreathingExercise from '@/components/wellness/BreathingExercise'
+import { useLocalStorage, getLocalStorageItem } from '@/hooks/useLocalStorage'
 import { 
   Heart, Brain, Sunrise, Moon, Activity, Smile, Frown, Meh, 
   AlertCircle, CheckCircle, Clock, Target, BookOpen, Users,
@@ -271,8 +272,8 @@ export default function ParentHealthPage() {
     positive_moments: []
   })
   
-  const [recoveryProgress, setRecoveryProgress] = useState({})
-  const [selfCareGoals, setSelfCareGoals] = useState({})
+  const [recoveryProgress, setRecoveryProgress] = useLocalStorage('parent-recovery-progress', {})
+  const [selfCareGoals, setSelfCareGoals] = useLocalStorage('parent-selfcare-goals', {})
   const [activeView, setActiveView] = useState('dashboard')
   const [showResourceModal, setShowResourceModal] = useState(false)
   const [selectedResource, setSelectedResource] = useState(null)
@@ -316,7 +317,7 @@ export default function ParentHealthPage() {
   // ✅ Save mood entry with psychological insights
   const saveMoodEntry = useCallback(() => {
     const today = new Date().toISOString().split('T')[0]
-    const moodData = JSON.parse(localStorage.getItem('parent-mood-data') || '{}')
+    const moodData = getLocalStorageItem('parent-mood-data', {})
     
     moodData[today] = {
       ...currentMoodEntry,
@@ -324,7 +325,9 @@ export default function ParentHealthPage() {
       baby_age_weeks: currentBaby ? Math.floor((new Date().getTime() - new Date((currentBaby as any).birthDate).getTime()) / (1000 * 60 * 60 * 24 * 7)) : 0
     }
     
-    localStorage.setItem('parent-mood-data', JSON.stringify(moodData))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('parent-mood-data', JSON.stringify(moodData))
+    }
     
     // ✅ Trigger analysis and recommendations
     analyzeWellbeingTrends(moodData)
@@ -489,7 +492,6 @@ export default function ParentHealthPage() {
                           }
                           (newGoals as any)[goal.id].completed = !(newGoals as any)[goal.id].completed
                           setSelfCareGoals(newGoals)
-                          localStorage.setItem('parent-selfcare-goals', JSON.stringify(newGoals))
                         }}
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                           (selfCareGoals as any)[goal.id]?.completed
@@ -612,7 +614,7 @@ export default function ParentHealthPage() {
   // ✅ Render comprehensive dashboard
   const renderDashboard = () => {
     const today = new Date().toISOString().split('T')[0]
-    const todayMood = JSON.parse(localStorage.getItem('parent-mood-data') || '{}')[today]
+    const todayMood = getLocalStorageItem('parent-mood-data', {})[today] || null
     
     return (
       <div className="space-y-6">
@@ -792,7 +794,6 @@ export default function ParentHealthPage() {
                         const newProgress: any = { ...(recoveryProgress as any) }
                         newProgress[item.id] = !newProgress[item.id]
                         setRecoveryProgress(newProgress)
-                        localStorage.setItem('parent-recovery-progress', JSON.stringify(newProgress))
                       }}
                       className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                         (recoveryProgress as any)[item.id]
