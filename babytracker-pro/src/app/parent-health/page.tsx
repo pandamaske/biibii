@@ -357,6 +357,8 @@ export default function ParentHealthPage() {
         
         // ✅ Trigger analysis and recommendations
         analyzeWellbeingTrends(moodData)
+      } else {
+        console.error('Failed to save mood entry')
       }
     } catch (error) {
       console.error('Error saving mood entry:', error)

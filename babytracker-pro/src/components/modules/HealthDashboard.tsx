@@ -25,12 +25,10 @@ import {
   VaccineEntryModal,
   MedicationEntryModal,
   SymptomAssessmentModal,
-  MilestoneTrackingModal,
   TemperatureSelector,
   type VaccineEntryData,
   type MedicationEntryData,
-  type SymptomAssessmentData,
-  type MilestoneData
+  type SymptomAssessmentData
 } from '@/components/health'
 import { VaccineScheduleCalculator } from '@/lib/vaccineSchedules'
 
@@ -39,7 +37,7 @@ interface HealthDashboardProps {
 }
 
 const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'vaccines' | 'symptoms' | 'medications' | 'milestones' | 'emergency'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'vaccines' | 'symptoms' | 'medications' | 'emergency'>('overview')
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const [showQuickNav, setShowQuickNav] = useState(false)
@@ -48,7 +46,6 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
     appointments: [],
     symptoms: [],
     medications: [],
-    milestones: [],
     providers: [],
     summary: null
   })
@@ -60,7 +57,6 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
   const [showVaccineModal, setShowVaccineModal] = useState(false)
   const [showMedicationModal, setShowMedicationModal] = useState(false)
   const [showSymptomModal, setShowSymptomModal] = useState(false)
-  const [showMilestoneModal, setShowMilestoneModal] = useState(false)
   const [showTemperatureLogger, setShowTemperatureLogger] = useState(false)
   const [editingItem, setEditingItem] = useState<any>(null)
 
@@ -69,7 +65,6 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
     { id: 'vaccines' as const, icon: Syringe, label: 'Vaccins' },
     { id: 'symptoms' as const, icon: Stethoscope, label: 'Symptômes' },
     { id: 'medications' as const, icon: Pill, label: 'Médicaments' },
-    { id: 'milestones' as const, icon: Brain, label: 'Développement' },
     { id: 'emergency' as const, icon: ShieldAlert, label: 'Urgence' },
   ]
 
@@ -86,23 +81,21 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
       try {
         setLoading(true)
         
-        const [babyRes, vaccinesRes, appointmentsRes, symptomsRes, medicationsRes, milestonesRes, providersRes] = await Promise.all([
+        const [babyRes, vaccinesRes, appointmentsRes, symptomsRes, medicationsRes, providersRes] = await Promise.all([
           fetch(`/api/babies/${babyId}`),
           fetch(`/api/health/vaccines?babyId=${babyId}`),
           fetch(`/api/health/appointments?babyId=${babyId}`),
           fetch(`/api/health/symptoms?babyId=${babyId}&limit=5`),
           fetch(`/api/health/medications?babyId=${babyId}&active=true`),
-          fetch(`/api/health/milestones?babyId=${babyId}`),
           fetch('/api/health/providers')
         ])
 
-        const [baby, vaccines, appointments, symptoms, medications, milestones, providers] = await Promise.all([
+        const [baby, vaccines, appointments, symptoms, medications, providers] = await Promise.all([
           babyRes.ok ? babyRes.json() : null,
           vaccinesRes.ok ? vaccinesRes.json() : [],
           appointmentsRes.ok ? appointmentsRes.json() : [],
           symptomsRes.ok ? symptomsRes.json() : [],
           medicationsRes.ok ? medicationsRes.json() : [],
-          milestonesRes.ok ? milestonesRes.json() : [],
           providersRes.ok ? providersRes.json() : []
         ])
 
@@ -112,7 +105,6 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
           appointments: Array.isArray(appointments) ? appointments : [],
           symptoms: Array.isArray(symptoms) ? symptoms : [],
           medications: Array.isArray(medications) ? medications : [],
-          milestones: Array.isArray(milestones) ? milestones : [],
           providers: Array.isArray(providers) ? providers : []
         })
       } catch (error) {
@@ -290,34 +282,6 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
     }
   }
 
-  const handleSaveMilestone = async (milestoneData: MilestoneData) => {
-    try {
-      setSaving(true)
-      const response = await fetch('/api/health/milestones', {
-        method: editingItem ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...milestoneData,
-          babyId,
-          ...(editingItem && { id: editingItem.id })
-        })
-      })
-
-      if (response.ok) {
-        // Reload milestones data
-        const milestonesRes = await fetch(`/api/health/milestones?babyId=${babyId}`)
-        const milestones = milestonesRes.ok ? await milestonesRes.json() : []
-        setHealthData((prev: any) => ({ ...prev, milestones: Array.isArray(milestones) ? milestones : [] }))
-        
-        setShowMilestoneModal(false)
-        setEditingItem(null)
-      }
-    } catch (error) {
-      console.error('Error saving milestone:', error)
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const HealthOverview = () => (
     <div className="space-y-6">
@@ -435,31 +399,8 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
             </div>
           ))}
 
-          {/* Recent milestones */}
-          {(healthData.milestones || []).filter((m: any) => m.achieved).slice(0, 2).map((milestone: any) => (
-            <div key={milestone.id} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <Brain className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {milestone.milestone}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    {milestone.achievedDate ? new Date(milestone.achievedDate).toLocaleDateString('fr-FR') : 'Récemment'}
-                  </div>
-                </div>
-              </div>
-              <span className="text-xs bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400 px-2 py-1 rounded-full font-medium flex items-center">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                Accompli
-              </span>
-            </div>
-          ))}
 
-          {(healthData.symptoms || []).length === 0 && (healthData.milestones || []).filter((m: any) => m.achieved).length === 0 && (
+          {(healthData.symptoms || []).length === 0 && (
             <div className="text-center text-gray-500 dark:text-gray-400 py-8">
               <Heart className="w-12 h-12 mx-auto mb-2 opacity-50" />
               <p>Aucune activité récente</p>
@@ -695,73 +636,6 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
                 <Pill className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p>Aucun médicament enregistré</p>
                 <p className="text-sm">Cliquez sur "Nouveau médicament" pour commencer</p>
-              </div>
-            )}
-          </div>
-        )
-      case 'milestones':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Étapes de développement
-              </h3>
-              <button 
-                onClick={() => {
-                  setEditingItem(null)
-                  setShowMilestoneModal(true)
-                }}
-                className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors flex items-center"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Évaluer étape
-              </button>
-            </div>
-            {(healthData.milestones || []).length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {['motor', 'cognitive', 'language', 'social', 'adaptive'].map(category => {
-                  const categoryMilestones = (healthData.milestones || []).filter((m: any) => m.category === category)
-                  const achievedCount = categoryMilestones.filter((m: any) => m.achieved).length
-                  const progress = categoryMilestones.length > 0 ? (achievedCount / categoryMilestones.length) * 100 : 0
-                  
-                  return (
-                    <div key={category} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-gray-900 dark:text-gray-100 capitalize">
-                          {category === 'motor' ? 'Moteur' :
-                           category === 'cognitive' ? 'Cognitif' :
-                           category === 'language' ? 'Langage' :
-                           category === 'social' ? 'Social' :
-                           'Adaptatif'}
-                        </h4>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                          {achievedCount}/{categoryMilestones.length}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                        <div 
-                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 dark:text-gray-400 py-12">
-                <Brain className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>Aucune étape de développement enregistrée</p>
-                <p className="text-sm mb-4">Commencez à suivre le développement de votre bébé</p>
-                <button 
-                  onClick={() => {
-                    setEditingItem(null)
-                    setShowMilestoneModal(true)
-                  }}
-                  className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
-                >
-                  Évaluer première étape
-                </button>
               </div>
             )}
           </div>
@@ -1053,22 +927,6 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         />
       )}
 
-      {showMilestoneModal && babyInfo && (
-        <MilestoneTrackingModal
-          isOpen={showMilestoneModal}
-          onClose={() => {
-            if (!saving) {
-              setShowMilestoneModal(false)
-              setEditingItem(null)
-            }
-          }}
-          onSave={handleSaveMilestone}
-          babyBirthDate={new Date(babyInfo.birthDate)}
-          currentMilestones={healthData.milestones || []}
-          initialData={editingItem}
-          isLoading={saving}
-        />
-      )}
     </div>
   )
 }
