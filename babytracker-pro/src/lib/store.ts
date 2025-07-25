@@ -1261,8 +1261,8 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
               currentBaby: profileData.babies?.[0] || null,
               appSettings: userSettings || {
                 theme: 'light',
-                colorScheme: 'green',
-                fontSize: 'medium',
+                colorScheme: 'pistacchio',
+                fontSize: 'small',
                 language: 'fr',
                 dateFormat: 'DD/MM/YYYY',
                 timeFormat: '24h',

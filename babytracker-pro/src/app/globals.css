@@ -51,37 +51,45 @@
 
 :root[data-theme="forest"],
 .theme-forest {
-  --forest-50 :  #D0ECE0;
-  --forest-100:  #9ED0B9;
-  --forest-200:  #6FA58D;
-  --forest-300:  #4A7A67;
-  --forest-400:  #35614E;
-  --forest-500:  #2A4A3B;  /* default background */
-  --forest-600:  #233E32;
-  --forest-700:  #1C3329;  /* cards, nav‑bars    */
-  --forest-800:  #14261F;
-  --forest-900:  #0F1B17;  /* overlays / true dark */
+  --forest-50 :  #F0F9F6;    /* Light mint text    */
+  --forest-100:  #D0ECE0;    /* Light surfaces     */
+  --forest-200:  #A0B5A8;    /* Secondary text     */
+  --forest-300:  #6CC7A4;    /* Mint accent        */
+  --forest-400:  #4A8F73;    /* Medium forest      */
+  --forest-500:  #1A3328;    /* Main background    */
+  --forest-600:  #0F241A;    /* Card backgrounds   */
+  --forest-700:  #0A1D12;    /* Darker cards       */
+  --forest-800:  #051108;    /* Deep shadows       */
+  --forest-900:  #021004;    /* True black         */
 
-  --mint-500   :  #55BE95; /* accent / CTA       */
-  --danger-500 :  #E86465; /* delete / error     */
+  --mint-50    :  #F0F9F6;    /* Lightest mint      */
+  --mint-400   :  #6CC7A4;    /* Main mint accent   */
+  --mint-500   :  #55BE95;    /* Darker mint        */
+  --mint-600   :  #4A8F73;    /* Deep mint          */
+  
+  --warning-400:  #F4B942;    /* Warning yellow     */
+  --danger-500 :  #E86465;    /* delete / error     */
+
+  /* Enhanced background gradient */
+  background: radial-gradient(ellipse at center, var(--forest-500) 0%, var(--forest-600) 45%, var(--forest-800) 100%);
 
   /* Semantic aliases (forest) */
   --color-bg       : var(--forest-500);
   --color-surface  : var(--forest-700);
-  --color-border   : rgb(255 255 255 / 6%);
+  --color-border   : rgba(108, 199, 164, 0.15);
   --color-text     : var(--forest-50);
-  --color-heading  : var(--mint-500);
-  --color-cta      : var(--mint-500);
+  --color-heading  : var(--mint-400);
+  --color-cta      : var(--mint-400);
   --color-danger   : var(--danger-500);
 
   /* Update primary variables for forest theme compatibility */
   --primary-50: var(--forest-50);
   --primary-100: var(--forest-100);
   --primary-200: var(--forest-200);
-  --primary-300: var(--forest-300);
+  --primary-300: var(--mint-400);
   --primary-400: var(--forest-400);
-  --primary-500: var(--mint-500);
-  --primary-600: var(--forest-600);
+  --primary-500: var(--mint-400);
+  --primary-600: var(--mint-500);
   --primary-700: var(--forest-700);
   --primary-800: var(--forest-800);
   --primary-900: var(--forest-900);
@@ -106,25 +114,169 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 
-/* buttons / CTAs */
+/* Enhanced Buttons with Glassmorphism */
 .btn-primary {
-  @apply px-4 py-2 rounded-xl font-semibold shadow-md transition;
+  @apply px-4 py-2 rounded-xl font-semibold shadow-md transition-all duration-200;
   background-color: var(--color-cta);
   color: white;
+  box-shadow: 
+    0 4px 12px rgba(var(--primary-500), 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
-.btn-primary:hover { filter: brightness(1.10); }
 
-/* cards */
-.glass-card {
-  backdrop-filter: blur(8px);
-  background: rgba(255,255,255,.20);          /* light theme   */
-  border: 1px solid rgba(255,255,255,.25);
+.btn-primary:hover { 
+  filter: brightness(1.10); 
+  transform: translateY(-1px);
+  box-shadow: 
+    0 6px 16px rgba(var(--primary-500), 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
+
+/* Schedule Button (Forest Theme) */
+.theme-forest .btn-schedule,
+:root[data-theme="forest"] .btn-schedule,
+.theme-pistacchio .btn-schedule {
+  background: rgba(108, 199, 164, 0.9);
+  color: #0A1D12;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 4px 12px rgba(108, 199, 164, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.theme-forest .btn-schedule:hover,
+:root[data-theme="forest"] .btn-schedule:hover,
+.theme-pistacchio .btn-schedule:hover {
+  background: rgba(108, 199, 164, 1);
+  transform: translateY(-1px);
+  box-shadow: 
+    0 6px 16px rgba(108, 199, 164, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Warning Icon Effects */
+.warning-icon {
+  color: #F4B942;
+  text-shadow: 0 0 8px rgba(244, 185, 66, 0.3);
+}
+
+/* Vaccine Status Dots */
+.vaccine-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #6CC7A4;
+  box-shadow: 
+    0 0 0 3px rgba(108, 199, 164, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced Glass Cards with Authentic Glassmorphism */
+.glass-card {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  
+  /* Light theme glass effect */
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(248, 254, 251, 0.90) 25%,
+    rgba(240, 249, 247, 0.80) 75%,
+    rgba(232, 245, 240, 0.75) 100%
+  );
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
 .theme-forest .glass-card,
 :root[data-theme="forest"] .glass-card,
 .theme-pistacchio .glass-card {
-  background: rgba(20,38,31,.35);             /* darker blur   */
-  border: 1px solid rgba(255,255,255,.10);
+  /* Authentic forest theme glassmorphism */
+  background: linear-gradient(135deg, 
+    rgba(45, 80, 60, 0.35) 0%,
+    rgba(28, 65, 45, 0.25) 25%,
+    rgba(20, 45, 30, 0.30) 75%,
+    rgba(15, 35, 22, 0.40) 100%
+  );
+  border: 1px solid rgba(108, 199, 164, 0.15);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.theme-forest .glass-card:hover,
+:root[data-theme="forest"] .glass-card:hover,
+.theme-pistacchio .glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.5),
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(108, 199, 164, 0.25);
+}
+
+/* Glass Card Variants */
+.glass-card-age {
+  position: relative;
+  padding: 24px;
+}
+
+.glass-card-age::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 30% 30%, rgba(108, 199, 164, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 70% 70%, rgba(45, 95, 75, 0.12) 0%, transparent 60%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.glass-card-vaccine {
+  position: relative;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.glass-card-vaccine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(108, 199, 164, 0.05) 0%,
+    rgba(45, 95, 75, 0.08) 100%
+  );
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 /* error badge */
@@ -200,31 +352,111 @@ h1, h2, h3, h4, h5, h6 {
   --primary-900: theme('colors.orange.900');
 }
 
-/* New Pistacchio Forest Theme */
+/* Enhanced Pistacchio Forest Theme */
 .theme-pistacchio {
-  --forest-50 :  #D0ECE0;
-  --forest-100:  #9ED0B9;
-  --forest-200:  #6FA58D;
-  --forest-300:  #4A7A67;
-  --forest-400:  #35614E;
-  --forest-500:  #2A4A3B;
-  --forest-600:  #233E32;
-  --forest-700:  #1C3329;
-  --forest-800:  #14261F;
-  --forest-900:  #0F1B17;
+  --forest-50 :  #F0F9F6;    /* Light mint text    */
+  --forest-100:  #D0ECE0;    /* Light surfaces     */
+  --forest-200:  #A0B5A8;    /* Secondary text     */
+  --forest-300:  #6CC7A4;    /* Mint accent        */
+  --forest-400:  #4A8F73;    /* Medium forest      */
+  --forest-500:  #1A3328;    /* Main background    */
+  --forest-600:  #0F241A;    /* Card backgrounds   */
+  --forest-700:  #0A1D12;    /* Darker cards       */
+  --forest-800:  #051108;    /* Deep shadows       */
+  --forest-900:  #021004;    /* True black         */
 
-  --mint-500:  #55BE95;
+  --mint-50    :  #F0F9F6;    /* Lightest mint      */
+  --mint-400   :  #6CC7A4;    /* Main mint accent   */
+  --mint-500   :  #55BE95;    /* Darker mint        */
+  --mint-600   :  #4A8F73;    /* Deep mint          */
+  
+  --warning-400:  #F4B942;    /* Warning yellow     */
+  --danger-500 :  #E86465;    /* delete / error     */
+
+  /* Enhanced background gradient */
+  background: radial-gradient(ellipse at center, var(--forest-500) 0%, var(--forest-600) 45%, var(--forest-800) 100%);
+
+  /* Semantic aliases (pistacchio) */
+  --color-bg       : var(--forest-500);
+  --color-surface  : var(--forest-700);
+  --color-border   : rgba(108, 199, 164, 0.15);
+  --color-text     : var(--forest-50);
+  --color-heading  : var(--mint-400);
+  --color-cta      : var(--mint-400);
+  --color-danger   : var(--danger-500);
 
   --primary-50: var(--forest-50);
   --primary-100: var(--forest-100);
   --primary-200: var(--forest-200);
-  --primary-300: var(--forest-300);
+  --primary-300: var(--mint-400);
   --primary-400: var(--forest-400);
-  --primary-500: var(--mint-500);
-  --primary-600: var(--forest-600);
+  --primary-500: var(--mint-400);
+  --primary-600: var(--mint-500);
   --primary-700: var(--forest-700);
   --primary-800: var(--forest-800);
   --primary-900: var(--forest-900);
+}
+
+/* Enhanced Body Background for Forest Theme */
+.theme-forest body,
+:root[data-theme="forest"] body,
+.theme-pistacchio body {
+  background: radial-gradient(ellipse at center, #1A3328 0%, #0D1F16 45%, #051108 100%) !important;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Navigation Glass Effects */
+.theme-forest .nav-glass,
+:root[data-theme="forest"] .nav-glass,
+.theme-pistacchio .nav-glass {
+  background: linear-gradient(135deg, 
+    rgba(45, 80, 60, 0.85) 0%,
+    rgba(28, 65, 45, 0.90) 50%,
+    rgba(15, 35, 22, 0.95) 100%
+  );
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-top: 1px solid rgba(108, 199, 164, 0.1);
+  box-shadow: 
+    0 -8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Status Indicators */
+.status-due {
+  color: #6CC7A4;
+  font-weight: 600;
+}
+
+.status-completed {
+  color: #A0B5A8;
+}
+
+.status-warning {
+  color: #F4B942;
+}
+
+/* Age Group Headers */
+.age-group-due {
+  color: #6CC7A4;
+  font-weight: 700;
+}
+
+/* Fade In Animation */
+@keyframes fadeInUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+.fade-in {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Font Size Classes */

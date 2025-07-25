@@ -23,8 +23,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>('light');
   const [actualTheme, setActualTheme] = useState<ActualTheme>('light');
-  const [colorScheme, setColorSchemeState] = useState('green');
-  const [fontSize, setFontSizeState] = useState('medium');
+  const [colorScheme, setColorSchemeState] = useState('pistacchio');
+  const [fontSize, setFontSizeState] = useState('small');
   const [mounted, setMounted] = useState(false);
   
   const { appSettings, updateSettings } = useBabyTrackerStore();
@@ -48,8 +48,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } else {
       // Fallback to localStorage and system preference
       const savedTheme = typeof window !== 'undefined' ? localStorage.getItem('theme') as Theme | null : null;
-      const savedColorScheme = typeof window !== 'undefined' ? localStorage.getItem('colorScheme') || 'green' : 'green';
-      const savedFontSize = typeof window !== 'undefined' ? localStorage.getItem('fontSize') || 'medium' : 'medium';
+      const savedColorScheme = typeof window !== 'undefined' ? localStorage.getItem('colorScheme') || 'pistacchio' : 'pistacchio';
+      const savedFontSize = typeof window !== 'undefined' ? localStorage.getItem('fontSize') || 'small' : 'small';
       const initialTheme = savedTheme || 'auto';
       
       setThemeState(initialTheme);
