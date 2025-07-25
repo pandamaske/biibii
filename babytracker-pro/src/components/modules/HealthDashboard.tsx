@@ -223,7 +223,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         // Reload vaccines data
         const vaccinesRes = await fetch(`/api/health/vaccines?babyId=${babyId}`)
         const vaccines = vaccinesRes.ok ? await vaccinesRes.json() : []
-        setHealthData(prev => ({ ...prev, vaccines: Array.isArray(vaccines) ? vaccines : [] }))
+        setHealthData((prev: any) => ({ ...prev, vaccines: Array.isArray(vaccines) ? vaccines : [] }))
         
         setShowVaccineModal(false)
         setEditingItem(null)
@@ -252,7 +252,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         // Reload medications data
         const medicationsRes = await fetch(`/api/health/medications?babyId=${babyId}`)
         const medications = medicationsRes.ok ? await medicationsRes.json() : []
-        setHealthData(prev => ({ ...prev, medications: Array.isArray(medications) ? medications : [] }))
+        setHealthData((prev: any) => ({ ...prev, medications: Array.isArray(medications) ? medications : [] }))
         
         setShowMedicationModal(false)
         setEditingItem(null)
@@ -280,7 +280,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         // Reload symptoms data
         const symptomsRes = await fetch(`/api/health/symptoms?babyId=${babyId}&limit=5`)
         const symptoms = symptomsRes.ok ? await symptomsRes.json() : []
-        setHealthData(prev => ({ ...prev, symptoms: Array.isArray(symptoms) ? symptoms : [] }))
+        setHealthData((prev: any) => ({ ...prev, symptoms: Array.isArray(symptoms) ? symptoms : [] }))
         
         setShowSymptomModal(false)
       }
@@ -308,7 +308,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         // Reload milestones data
         const milestonesRes = await fetch(`/api/health/milestones?babyId=${babyId}`)
         const milestones = milestonesRes.ok ? await milestonesRes.json() : []
-        setHealthData(prev => ({ ...prev, milestones: Array.isArray(milestones) ? milestones : [] }))
+        setHealthData((prev: any) => ({ ...prev, milestones: Array.isArray(milestones) ? milestones : [] }))
         
         setShowMilestoneModal(false)
         setEditingItem(null)

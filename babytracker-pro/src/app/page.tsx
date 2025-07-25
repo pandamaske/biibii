@@ -468,7 +468,7 @@ export default function HomePage() {
     soiled: todayDiapers.filter(d => d.type === 'soiled' || d.type === 'mixed').length,
     lastChange: todayDiapers.length > 0 ? todayDiapers[0] : null,
     timeSinceLastChange: todayDiapers.length > 0 
-      ? Math.floor((new Date().getTime() - new Date(todayDiapers[0].time || todayDiapers[0].timestamp).getTime()) / (1000 * 60))
+      ? Math.floor((new Date().getTime() - new Date((todayDiapers[0] as any).time || (todayDiapers[0] as any).timestamp).getTime()) / (1000 * 60))
       : null
   }
 
@@ -477,8 +477,8 @@ export default function HomePage() {
     sessions: todaySleeps.length,
     average: todaySleeps.length > 0 ? Math.floor(totalSleep / todaySleeps.length) : 0,
     longest: todaySleeps.reduce((max, sleep) => {
-      if (!sleep.endTime) return max
-      const duration = Math.floor((new Date(sleep.endTime).getTime() - new Date(sleep.startTime).getTime()) / (1000 * 60))
+      if (!(sleep as any).endTime) return max
+      const duration = Math.floor((new Date((sleep as any).endTime).getTime() - new Date((sleep as any).startTime).getTime()) / (1000 * 60))
       return Math.max(max, duration)
     }, 0),
     quality: todaySleeps.length > 0 
@@ -982,11 +982,11 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">
-                      {todaySleeps[0].type === 'night' ? 'Nuit' : 'Sieste'}
-                      {todaySleeps[0].endTime && ` (${formatDuration(Math.floor((ensureDate(todaySleeps[0].endTime)?.getTime() || 0 - ensureDate(todaySleeps[0].startTime)?.getTime() || 0) / (1000 * 60)))})`}
+                      {(todaySleeps[0] as any).type === 'night' ? 'Nuit' : 'Sieste'}
+                      {(todaySleeps[0] as any).endTime && ` (${formatDuration(Math.floor((ensureDate((todaySleeps[0] as any).endTime)?.getTime() || 0 - ensureDate((todaySleeps[0] as any).startTime)?.getTime() || 0) / (1000 * 60)))})`}
                     </p>
                     <p className="text-sm text-gray-400">
-                      {formatRelativeTime(todaySleeps[0].startTime)}
+                      {formatRelativeTime((todaySleeps[0] as any).startTime)}
                     </p>
                   </div>
                   <div className="text-lg">

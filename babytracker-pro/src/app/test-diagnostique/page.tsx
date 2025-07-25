@@ -717,7 +717,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
             <input
               type="text"
               value={babyForm.name}
-              onChange={(e) => setBabyForm(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => setBabyForm((prev: any) => ({ ...prev, name: e.target.value }))}
               className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
             />
           </div>
@@ -727,7 +727,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
             <input
               type="date"
               value={new Date(babyForm.birthDate).toISOString().split('T')[0]}
-              onChange={(e) => setBabyForm(prev => ({ ...prev, birthDate: new Date(e.target.value) }))}
+              onChange={(e) => setBabyForm((prev: any) => ({ ...prev, birthDate: new Date(e.target.value) }))}
               className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
             />
           </div>
@@ -738,7 +738,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
               <input
                 type="number"
                 value={babyForm.weight}
-                onChange={(e) => setBabyForm(prev => ({ ...prev, weight: parseInt(e.target.value) }))}
+                onChange={(e) => setBabyForm((prev: any) => ({ ...prev, weight: parseInt(e.target.value) }))}
                 className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
               />
             </div>
@@ -747,7 +747,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
               <input
                 type="number"
                 value={babyForm.height}
-                onChange={(e) => setBabyForm(prev => ({ ...prev, height: parseInt(e.target.value) }))}
+                onChange={(e) => setBabyForm((prev: any) => ({ ...prev, height: parseInt(e.target.value) }))}
                 className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
               />
             </div>
@@ -757,7 +757,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
             <label className="block text-sm font-medium  mb-2">Genre</label>
             <select
               value={babyForm.gender}
-              onChange={(e) => setBabyForm(prev => ({ ...prev, gender: e.target.value }))}
+              onChange={(e) => setBabyForm((prev: any) => ({ ...prev, gender: e.target.value }))}
               className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none"
             >
               <option value="male">Garçon</option>
@@ -772,7 +772,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
               {['👶', '🍼', '🧸', '🎈', '⭐', '🌙', '☀️', '🌈', '🦄', '🐣', '🐻', '🦁', '🐰', '🐸', '🐯', '🐵'].map(emoji => (
                 <button
                   key={emoji}
-                  onClick={() => setBabyForm(prev => ({ ...prev, avatar: emoji }))}
+                  onClick={() => setBabyForm((prev: any) => ({ ...prev, avatar: emoji }))}
                   className={`w-12 h-12 rounded-xl text-2xl transition-all ${
                     babyForm.avatar === emoji 
                       ? 'bg-purple-100 border-2 border-purple-500 scale-110' 
@@ -1336,7 +1336,7 @@ function FamilySection({ familyMembers, setFamilyMembers, showInviteModal, setSh
             ...member,
             permissions: {
               ...member.permissions,
-              [permission]: !member.permissions[permission]
+              [permission]: !(member.permissions as any)[permission]
             }
           }
         : member

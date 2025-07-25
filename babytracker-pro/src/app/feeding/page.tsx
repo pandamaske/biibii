@@ -83,11 +83,11 @@ const EditFeedingModal = ({ feeding, isOpen, onClose, onSave }: {
       
       const initialData = {
         startTime: startDate.toISOString().slice(0, 16),
-        kind: feeding.kind || 'biberon',
+        kind: (feeding.kind || 'biberon') as "biberon",
         amount: feeding.amount?.toString() || '',
-        duration: Math.floor((feeding.duration || 0) / 60).toString(),
-        mood: feeding.mood || 'content',
-        notes: feeding.notes || ''
+        duration: Math.floor((Number(feeding.duration) || 0) / 60).toString(),
+        mood: (feeding.mood || 'content') as "content",
+        notes: (feeding.notes || '') as string
       }
       
       console.log('Setting edit data to:', initialData)
@@ -160,13 +160,13 @@ const EditFeedingModal = ({ feeding, isOpen, onClose, onSave }: {
                     key={type.value}
                     onClick={() => {
                       console.log('Type button clicked:', type.value, 'current:', editData.kind)
-                      setEditData(prev => ({ ...prev, kind: type.value }))
+                      setEditData(prev => ({ ...prev, kind: type.value as any }))
                     }}
                     className={`p-3 rounded-xl border-2 transition-all duration-300 ${
                       isSelected
-                        ? type.color === 'blue' 
+                        ? (type as any).color === 'blue' 
                           ? 'border-blue-500 bg-blue-50 text-blue-700' 
-                          : type.color === 'pink' 
+                          : (type as any).color === 'pink' 
                           ? 'border-pink-500 bg-pink-50 text-pink-700'
                           : 'border-green-500 bg-green-50 text-green-700'
                         : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600  dark:text-gray-300'
@@ -181,7 +181,7 @@ const EditFeedingModal = ({ feeding, isOpen, onClose, onSave }: {
           </div>
 
           {/* Quantité */}
-          {editData.kind !== 'tétée' && (
+          {(editData as any).kind !== 'tétée' && (
             <div>
               <label className="block text-sm font-medium  dark:text-gray-300 mb-2">
                 Quantité (ml)
@@ -221,12 +221,12 @@ const EditFeedingModal = ({ feeding, isOpen, onClose, onSave }: {
                 return (
                   <button
                     key={mood.value}
-                    onClick={() => setEditData(prev => ({ ...prev, mood: mood.value }))}
+                    onClick={() => setEditData(prev => ({ ...prev, mood: mood.value as any }))}
                     className={`p-3 rounded-xl border-2 transition-all duration-300 ${
                       isMoodSelected
-                        ? mood.color === 'green'
+                        ? (mood as any).color === 'green'
                           ? 'border-green-500 bg-green-50 text-green-700'
-                          : mood.color === 'blue'
+                          : (mood as any).color === 'blue'
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-orange-500 bg-orange-50 text-orange-700'
                         : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600  dark:text-gray-300'
@@ -367,13 +367,13 @@ export default function FeedingPage() {
 
   const handleSaveEditedFeeding = useCallback((updatedFeeding: Record<string, unknown>) => {
     console.log('Saving edited feeding:', updatedFeeding)
-    updateFeeding(updatedFeeding.id, {
-      startTime: updatedFeeding.startTime,
-      kind: updatedFeeding.kind,
-      amount: updatedFeeding.amount,
-      duration: updatedFeeding.duration,
-      mood: updatedFeeding.mood,
-      notes: updatedFeeding.notes
+    updateFeeding(updatedFeeding.id as string, {
+      startTime: updatedFeeding.startTime as Date,
+      kind: updatedFeeding.kind as any,
+      amount: updatedFeeding.amount as number,
+      duration: updatedFeeding.duration as number,
+      mood: updatedFeeding.mood as any,
+      notes: updatedFeeding.notes as string
     })
     
     // ✅ Force immediate refresh (store function already triggers refresh-live-data)
@@ -636,7 +636,7 @@ export default function FeedingPage() {
                   
                   {type.value === 'solide' && (
                     <button
-                      onClick={() => handleQuickFeed(0, 'solide')}
+                      onClick={() => handleQuickFeed(0, 'solide' as any)}
                       className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl py-3 font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105 shadow-medium"
                     >
                       Commencer
@@ -708,7 +708,7 @@ export default function FeedingPage() {
                 .sort((a, b) => (ensureDate(b.startTime)?.getTime() || 0) - (ensureDate(a.startTime)?.getTime() || 0))
                 .map((feeding) => (
                   <div
-                    key={feeding.id}
+                    key={String(feeding.id)}
                     className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-300 hover-lift"
                   >
                     <div className="flex items-center space-x-4">
@@ -729,21 +729,21 @@ export default function FeedingPage() {
                         <p className="font-medium text-gray-800 dark:text-gray-200">
                           {feeding.kind === 'biberon' ? 'Biberon' : 
                            feeding.kind === 'tétée' ? 'Tétée' : 'Solide'}
-                          {feeding.amount && ` • ${feeding.amount}ml`}
+                          {(feeding.amount as any) && ` • ${feeding.amount as any}ml`}
                         </p>
                         <div className="flex items-center space-x-4 text-sm  dark:text-gray-400">
                           <ClientOnly fallback="--:--">
                             <span>{formatTimeFromDate(feeding.startTime)}</span>
                           </ClientOnly>
-                          {feeding.duration > 0 && (
-                            <span>Durée: {formatDuration(Math.floor(feeding.duration / 60))}</span>
+                          {(feeding.duration as any) > 0 && (
+                            <span>Durée: {formatDuration(Math.floor((feeding.duration as any) / 60))}</span>
                           )}
                           <ClientOnly fallback="--">
                             <span>{safeFormatRelativeTime(feeding.startTime)}</span>
                           </ClientOnly>
                         </div>
-                        {feeding.notes && (
-                          <p className="text-xs  dark:text-gray-500 mt-1">{feeding.notes}</p>
+                        {(feeding.notes as any) && (
+                          <p className="text-xs  dark:text-gray-500 mt-1">{feeding.notes as any}</p>
                         )}
                       </div>
                     </div>
@@ -767,7 +767,7 @@ export default function FeedingPage() {
                       {/* Delete button */}
                       <button
                         onClick={() => {
-                          removeFeeding(feeding.id)
+                          removeFeeding(feeding.id as string)
                           
                           // ✅ Force refresh live data immediately after deletion
                           liveData.refresh() // Immediate call
@@ -875,7 +875,7 @@ export default function FeedingPage() {
 
         {/* Edit Feeding Modal */}
         <EditFeedingModal
-          feeding={editingFeeding}
+          feeding={editingFeeding || {}}
           isOpen={showEditModal}
           onClose={handleCloseModal}
           onSave={handleSaveEditedFeeding}

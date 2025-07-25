@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx prisma:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(rm:*)",
+      "Bash(del \"C:\\Users\\toufik.abdelmalek\\OneDrive - GEODIS\\Visual Studio\\.git\\index.lock\")"
     ],
     "deny": []
   }

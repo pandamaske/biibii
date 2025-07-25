@@ -8,7 +8,7 @@ import {
   Scale, TrendingUp, Plus, Baby, Trash2, Edit3, Save, X, Calendar,
   Activity, Target, AlertTriangle, Camera, Download, Eye,
   Brain, Heart, Ruler, BarChart3, LineChart, PieChart,
-  Tooth, Smile, Thermometer, Droplets, Moon
+  Circle, Smile, Thermometer, Droplets, Moon
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import ClientOnly from '@/components/ClientOnly'
@@ -159,7 +159,6 @@ const TeethDiagram = ({ teethStatus, onToothClick, ageInMonths }: any) => {
                 rx="2"
                 className={`cursor-pointer transition-all duration-300 hover:scale-110 ${getToothColor(toothData)}`}
                 onClick={() => onToothClick(toothData)}
-                title={`${toothData?.name} - ${getToothStatus(toothData)}`}
               />
             )
           })}
@@ -180,7 +179,6 @@ const TeethDiagram = ({ teethStatus, onToothClick, ageInMonths }: any) => {
                 rx="2"
                 className={`cursor-pointer transition-all duration-300 hover:scale-110 ${getToothColor(toothData)}`}
                 onClick={() => onToothClick(toothData)}
-                title={`${toothData?.name} - ${getToothStatus(toothData)}`}
               />
             )
           })}
@@ -201,7 +199,6 @@ const TeethDiagram = ({ teethStatus, onToothClick, ageInMonths }: any) => {
                 rx="2"
                 className={`cursor-pointer transition-all duration-300 hover:scale-110 ${getToothColor(toothData)}`}
                 onClick={() => onToothClick(toothData)}
-                title={`${toothData?.name} - ${getToothStatus(toothData)}`}
               />
             )
           })}
@@ -218,7 +215,6 @@ const TeethDiagram = ({ teethStatus, onToothClick, ageInMonths }: any) => {
                 d={`M${tooth.x-3} ${tooth.y} L${tooth.x} ${tooth.y-8} L${tooth.x+3} ${tooth.y} Q${tooth.x} ${tooth.y+6} ${tooth.x-3} ${tooth.y}`}
                 className={`cursor-pointer transition-all duration-300 hover:scale-110 ${getToothColor(toothData)}`}
                 onClick={() => onToothClick(toothData)}
-                title={`${toothData?.name} - ${getToothStatus(toothData)}`}
               />
             )
           })}
@@ -239,7 +235,6 @@ const TeethDiagram = ({ teethStatus, onToothClick, ageInMonths }: any) => {
                 rx="2"
                 className={`cursor-pointer transition-all duration-300 hover:scale-110 ${getToothColor(toothData)}`}
                 onClick={() => onToothClick(toothData)}
-                title={`${toothData?.name} - ${getToothStatus(toothData)}`}
               />
             )
           })}
@@ -261,7 +256,6 @@ const TeethDiagram = ({ teethStatus, onToothClick, ageInMonths }: any) => {
                 rx="1"
                 className={`cursor-pointer transition-all duration-300 hover:scale-110 ${getToothColor(toothData)}`}
                 onClick={() => onToothClick(toothData)}
-                title={`${toothData?.name} - ${getToothStatus(toothData)}`}
               />
             )
           })}
@@ -282,7 +276,6 @@ const TeethDiagram = ({ teethStatus, onToothClick, ageInMonths }: any) => {
                 rx="1"
                 className={`cursor-pointer transition-all duration-300 hover:scale-110 ${getToothColor(toothData)}`}
                 onClick={() => onToothClick(toothData)}
-                title={`${toothData?.name} - ${getToothStatus(toothData)}`}
               />
             )
           })}
@@ -303,7 +296,6 @@ const TeethDiagram = ({ teethStatus, onToothClick, ageInMonths }: any) => {
                 rx="2"
                 className={`cursor-pointer transition-all duration-300 hover:scale-110 ${getToothColor(toothData)}`}
                 onClick={() => onToothClick(toothData)}
-                title={`${toothData?.name} - ${getToothStatus(toothData)}`}
               />
             )
           })}
@@ -320,7 +312,6 @@ const TeethDiagram = ({ teethStatus, onToothClick, ageInMonths }: any) => {
                 d={`M${tooth.x-3} ${tooth.y+6} L${tooth.x} ${tooth.y-2} L${tooth.x+3} ${tooth.y+6} Q${tooth.x} ${tooth.y+8} ${tooth.x-3} ${tooth.y+6}`}
                 className={`cursor-pointer transition-all duration-300 hover:scale-110 ${getToothColor(toothData)}`}
                 onClick={() => onToothClick(toothData)}
-                title={`${toothData?.name} - ${getToothStatus(toothData)}`}
               />
             )
           })}
@@ -341,7 +332,6 @@ const TeethDiagram = ({ teethStatus, onToothClick, ageInMonths }: any) => {
                 rx="2"
                 className={`cursor-pointer transition-all duration-300 hover:scale-110 ${getToothColor(toothData)}`}
                 onClick={() => onToothClick(toothData)}
-                title={`${toothData?.name} - ${getToothStatus(toothData)}`}
               />
             )
           })}

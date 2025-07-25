@@ -487,7 +487,7 @@ const SymptomAssessmentModal: React.FC<SymptomAssessmentModalProps> = ({
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <div className="font-medium text-gray-900 dark:text-gray-100">{symptom.name}</div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">{SYMPTOM_CATEGORIES[symptom.category].name}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{(SYMPTOM_CATEGORIES as any)[symptom.category]?.name}</div>
                     </div>
                     <button
                       onClick={() => removeSymptom(index)}

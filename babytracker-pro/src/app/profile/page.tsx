@@ -41,7 +41,7 @@ interface UserProfile {
 
 interface AppSettings {
   theme: 'light' | 'dark' | 'auto'
-  colorScheme: 'green' | 'blue' | 'amber' | 'pink' | 'orange'
+  colorScheme: 'green' | 'blue' | 'purple' | 'pink' | 'orange' | 'pistacchio'
   fontSize: 'small' | 'medium' | 'large'
   language: 'fr' | 'en' | 'es' | 'de'
   dateFormat: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD'
@@ -187,7 +187,7 @@ export default function ProfilePage() {
   const colorSchemes = [
     { value: 'green', name: 'Vert Nature', primary: 'bg-green-500', secondary: 'bg-green-100' },
     { value: 'blue', name: 'Bleu Ocean', primary: 'bg-blue-500', secondary: 'bg-blue-100' },
-    { value: 'amber', name: 'Violet Doux', primary: 'bg-amber-500', secondary: 'bg-amber-100' },
+    { value: 'purple', name: 'Violet Doux', primary: 'bg-purple-500', secondary: 'bg-purple-100' },
     { value: 'pink', name: 'Rose Tendre', primary: 'bg-pink-500', secondary: 'bg-pink-100' },
     { value: 'orange', name: 'Orange Chaleureux', primary: 'bg-orange-500', secondary: 'bg-orange-100' },
     { value: 'pistacchio', name: 'Pistacchio Forêt 🌲', primary: 'bg-emerald-600', secondary: 'bg-emerald-100' }
@@ -761,7 +761,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
             <input
               type="text"
               value={babyForm.name}
-              onChange={(e) => setBabyForm(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => setBabyForm((prev: any) => ({ ...prev, name: e.target.value }))}
               className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none"
             />
           </div>
@@ -773,7 +773,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
               value={ensureDate(babyForm.birthDate)?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0]}
               onChange={(e) => {
                 const date = e.target.value ? new Date(e.target.value) : new Date()
-                setBabyForm(prev => ({ ...prev, birthDate: isNaN(date.getTime()) ? new Date() : date }))
+                setBabyForm((prev: any) => ({ ...prev, birthDate: isNaN(date.getTime()) ? new Date() : date }))
               }}
               className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none"
             />
@@ -785,7 +785,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
               <input
                 type="number"
                 value={babyForm.weight}
-                onChange={(e) => setBabyForm(prev => ({ ...prev, weight: parseInt(e.target.value) }))}
+                onChange={(e) => setBabyForm((prev: any) => ({ ...prev, weight: parseInt(e.target.value) }))}
                 className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none"
               />
             </div>
@@ -794,7 +794,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
               <input
                 type="number"
                 value={babyForm.height}
-                onChange={(e) => setBabyForm(prev => ({ ...prev, height: parseInt(e.target.value) }))}
+                onChange={(e) => setBabyForm((prev: any) => ({ ...prev, height: parseInt(e.target.value) }))}
                 className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none"
               />
             </div>
@@ -804,7 +804,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
             <label className="block text-sm font-medium  mb-2">Genre</label>
             <select
               value={babyForm.gender}
-              onChange={(e) => setBabyForm(prev => ({ ...prev, gender: e.target.value }))}
+              onChange={(e) => setBabyForm((prev: any) => ({ ...prev, gender: e.target.value }))}
               className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none"
             >
               <option value="male">Garçon</option>
@@ -819,7 +819,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
               {['👶', '🍼', '🧸', '🎈', '⭐', '🌙', '☀️', '🌈', '🦄', '🐣', '🐻', '🦁', '🐰', '🐸', '🐯', '🐵'].map(emoji => (
                 <button
                   key={emoji}
-                  onClick={() => setBabyForm(prev => ({ ...prev, avatar: emoji }))}
+                  onClick={() => setBabyForm((prev: any) => ({ ...prev, avatar: emoji }))}
                   className={`w-12 h-12 rounded-xl text-2xl transition-all ${
                     babyForm.avatar === emoji 
                       ? 'bg-amber-100 border-2 border-amber-500 scale-110' 
@@ -1482,7 +1482,7 @@ function FamilySection({ familyMembers, setFamilyMembers, showInviteModal, setSh
             ...member,
             permissions: {
               ...member.permissions,
-              [permission]: !member.permissions[permission]
+              [permission]: !(member.permissions as any)[permission]
             }
           }
         : member

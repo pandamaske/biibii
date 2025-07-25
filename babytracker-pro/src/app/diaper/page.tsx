@@ -471,8 +471,8 @@ const quickAddDiaper = useCallback((type: 'wet' | 'soiled' | 'mixed' | 'dry') =>
             }).map(diaper => (
               <DiaperCard
                 key={String(diaper.id)}
-                diaper={diaper}
-                onEdit={setEditingDiaper}
+                diaper={diaper as any}
+                onEdit={(d: any) => setEditingDiaper(d)}
                 onDelete={deleteDiaper}
               />
             ))}
@@ -488,11 +488,11 @@ const quickAddDiaper = useCallback((type: 'wet' | 'soiled' | 'mixed' | 'dry') =>
         )}
 
         {viewMode === 'week' && (
-          <WeeklyView diapers={weeklyData.diapers} loading={weeklyData.loading} error={weeklyData.error} />
+          <WeeklyView diapers={weeklyData.diapers as any} loading={weeklyData.loading} error={weeklyData.error} />
         )}
 
         {viewMode === 'insights' && (
-          <InsightsView diapers={analyticsData.diapers} ageInWeeks={ageInWeeks} loading={analyticsData.loading} error={analyticsData.error} />
+          <InsightsView diapers={analyticsData.diapers as any} ageInWeeks={ageInWeeks} loading={analyticsData.loading} error={analyticsData.error} />
         )}
 
         {/* Timeline for today */}
@@ -500,7 +500,7 @@ const quickAddDiaper = useCallback((type: 'wet' | 'soiled' | 'mixed' | 'dry') =>
           <TimelineView diapers={(liveData.liveData.diapers || []).filter(d => {
             const today = new Date()
             return getDiaperTimestamp(d).toDateString() === today.toDateString()
-          })} />
+          }) as any} />
         )}
       </div>
 
@@ -511,7 +511,7 @@ const quickAddDiaper = useCallback((type: 'wet' | 'soiled' | 'mixed' | 'dry') =>
          onSave={(diaper) => {
   addDiaper(diaper) // ✅ Use store function
   setShowDetailedEntry(false)
-  generateHealthAlerts([diaper, ...(liveData.liveData.diapers || [])])
+  generateHealthAlerts([diaper as any, ...(liveData.liveData.diapers || []).map((d: any) => d)])
   
   // ✅ Force refresh live data immediately
   setTimeout(() => liveData.refresh(), 100)
@@ -519,20 +519,20 @@ const quickAddDiaper = useCallback((type: 'wet' | 'soiled' | 'mixed' | 'dry') =>
   // ✅ Also trigger global refresh event
   window.dispatchEvent(new CustomEvent('refresh-live-data'))
 }}
-          currentBaby={currentBaby}
+          currentBaby={currentBaby as any}
         />
       )}
 
       {/* Edit Modal */}
       {editingDiaper && (
         <DetailedEntryModal
-          diaper={editingDiaper}
+          diaper={editingDiaper as any}
           onClose={() => setEditingDiaper(null)}
           onSave={(updated) => {
   removeDiaper(updated.id)
   addDiaper(updated)
   setEditingDiaper(null)
-  generateHealthAlerts((liveData.liveData.diapers || []).map(d => d.id === updated.id ? updated : d))
+  generateHealthAlerts((liveData.liveData.diapers || []).map((d: any) => d.id === updated.id ? updated : d) as any)
   
   // ✅ Force refresh live data immediately
   setTimeout(() => liveData.refresh(), 100)
@@ -540,7 +540,7 @@ const quickAddDiaper = useCallback((type: 'wet' | 'soiled' | 'mixed' | 'dry') =>
   // ✅ Also trigger global refresh event
   window.dispatchEvent(new CustomEvent('refresh-live-data'))
 }}
-          currentBaby={currentBaby}
+          currentBaby={currentBaby as any}
         />
       )}
     </AppLayout>
@@ -595,31 +595,31 @@ function DiaperCard({ diaper, onEdit, onDelete }: {
                  diaper.type === 'soiled' ? 'Caca' :
                  diaper.type === 'mixed' ? 'Mixte' : 'Sèche'}
               </h4>
-              <span className="text-2xl">{getMoodEmoji(diaper.mood)}</span>
+              <span className="text-2xl">{getMoodEmoji((diaper as any).mood || 'comfortable')}</span>
             </div>
             
             <div className="text-sm  space-y-1">
               <p className="flex items-center">
                 <Clock className="w-3 h-3 mr-1" />
-                {timeFR(getDiaperTimestamp(diaper))}
+                {timeFR(getDiaperTimestamp(diaper as any))}
               </p>
               
-              {diaper.changedBy && (
-                <p>Changé par: {diaper.changedBy}</p>
+              {(diaper as any).changedBy && (
+                <p>Changé par: {(diaper as any).changedBy}</p>
               )}
               
-              {diaper.stool && (
-                <p>Couleur: {diaper.stool.color}, Consistance: {diaper.stool.consistency}</p>
+              {(diaper as any).stool && (
+                <p>Couleur: {(diaper as any).stool.color}, Consistance: {(diaper as any).stool.consistency}</p>
               )}
               
-              {diaper.wetness && (
-                <p>Niveau: {diaper.wetness.level}, Couleur: {diaper.wetness.color}</p>
+              {(diaper as any).wetness && (
+                <p>Niveau: {(diaper as any).wetness.level}, Couleur: {(diaper as any).wetness.color}</p>
               )}
               
-              {(diaper.diaper?.leaked || diaper.diaper?.rash) && (
+              {((diaper as any).diaper?.leaked || (diaper as any).diaper?.rash) && (
                 <div className="flex space-x-2">
-                  {diaper.diaper?.leaked && <span className="text-red-600">💦 Fuite</span>}
-                  {diaper.diaper?.rash && <span className="text-orange-600">🔴 Rougeur</span>}
+                  {(diaper as any).diaper?.leaked && <span className="text-red-600">💦 Fuite</span>}
+                  {(diaper as any).diaper?.rash && <span className="text-orange-600">🔴 Rougeur</span>}
                 </div>
               )}
               
@@ -691,7 +691,7 @@ function WeeklyView({ diapers, loading, error }: { diapers: DiaperEntry[], loadi
       date.setDate(weekStart.getDate() + i)
       
       const dayDiapers = diapers.filter(d => {
-        const diaperDate = getDiaperTimestamp(d)
+        const diaperDate = getDiaperTimestamp(d as any)
         const matches = diaperDate.toDateString() === date.toDateString()
         if (matches) {
           console.log(`📊 Found diaper for ${date.toDateString()}:`, d)
@@ -706,7 +706,7 @@ function WeeklyView({ diapers, loading, error }: { diapers: DiaperEntry[], loadi
         total: dayDiapers.length,
         wet: dayDiapers.filter(d => d.type === 'wet' || d.type === 'mixed').length,
         soiled: dayDiapers.filter(d => d.type === 'soiled' || d.type === 'mixed').length,
-        leaks: dayDiapers.filter(d => d.diaper?.leaked || false).length
+        leaks: dayDiapers.filter(d => (d as any).diaper?.leaked || false).length
       }
     })
     
@@ -786,7 +786,7 @@ function InsightsView({ diapers, ageInWeeks, loading, error }: { diapers: Diaper
     
     // Pattern analysis
     const hourlyPattern = Array.from({ length: 24 }, (_, hour) => {
-      const count = recentDiapers.filter(d => getDiaperTimestamp(d).getHours() === hour).length
+      const count = recentDiapers.filter(d => getDiaperTimestamp(d as any).getHours() === hour).length
       return { hour, count }
     })
     
@@ -798,9 +798,9 @@ function InsightsView({ diapers, ageInWeeks, loading, error }: { diapers: Diaper
     
     // Stool color analysis
     const stoolColors = recentDiapers
-      .filter(d => d.stool)
+      .filter(d => (d as any).stool)
       .reduce((acc, d) => {
-        const color = d.stool!.color
+        const color = (d as any).stool!.color
         acc[color] = (acc[color] || 0) + 1
         return acc
       }, {} as Record<string, number>)
@@ -821,7 +821,7 @@ function InsightsView({ diapers, ageInWeeks, loading, error }: { diapers: Diaper
       stoolColors,
       recommendations,
       averageDaily: Math.round(recentDiapers.length / 7),
-      leakRate: Math.round((recentDiapers.filter(d => d.diaper?.leaked || false).length / recentDiapers.length) * 100)
+      leakRate: Math.round((recentDiapers.filter(d => (d as any).diaper?.leaked || false).length / recentDiapers.length) * 100)
     }
   }, [diapers, ageInWeeks])
 
@@ -939,7 +939,7 @@ function InsightsView({ diapers, ageInWeeks, loading, error }: { diapers: Diaper
 // Timeline View Component
 function TimelineView({ diapers }: { diapers: DiaperEntry[] }) {
   const sortedDiapers = [...diapers].sort((a, b) => 
-    getDiaperTimestamp(a).getTime() - getDiaperTimestamp(b).getTime()
+    getDiaperTimestamp(a as any).getTime() - getDiaperTimestamp(b as any).getTime()
   )
 
   return (
@@ -972,7 +972,7 @@ function TimelineView({ diapers }: { diapers: DiaperEntry[] }) {
               <div className="flex-1 bg-gray-50 rounded-xl p-3">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-gray-800">
-                    {timeFR(getDiaperTimestamp(diaper))}
+                    {timeFR(getDiaperTimestamp(diaper as any))}
                   </span>
                   <span className="text-sm  capitalize">
                     {diaper.type === 'wet' ? 'Pipi' :
@@ -985,14 +985,14 @@ function TimelineView({ diapers }: { diapers: DiaperEntry[] }) {
                   <p className="text-xs  mt-1">{diaper.notes}</p>
                 )}
                 
-                {(diaper.diaper?.leaked || diaper.diaper?.rash) && (
+                {((diaper as any).diaper?.leaked || (diaper as any).diaper?.rash) && (
                   <div className="flex space-x-2 mt-1">
-                    {diaper.diaper?.leaked && (
+                    {(diaper as any).diaper?.leaked && (
                       <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">
                         Fuite
                       </span>
                     )}
-                    {diaper.diaper?.rash && (
+                    {(diaper as any).diaper?.rash && (
                       <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full">
                         Rougeur
                       </span>
@@ -1019,8 +1019,8 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
     if (diaper) {
       return {
         ...diaper,
-        timestamp: ensureDate(diaper.timestamp || diaper.time) || new Date(),
-        diaper: diaper.diaper || { size: 'size1', leaked: false, rash: false }
+        timestamp: ensureDate((diaper as any).timestamp || diaper.time) || new Date(),
+        diaper: (diaper as any).diaper || { size: 'size1', leaked: false, rash: false }
       }
     }
     return {
@@ -1039,17 +1039,18 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
   const handleSave = () => {
     if (!currentBaby) return
 
-    const newDiaper: DiaperEntry = {
+    const newDiaper: any = {
       id: diaper?.id || `diaper-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      babyId: currentBaby.id,
-      timestamp: formData.timestamp || new Date(),
+      babyId: (currentBaby as any).id,
+      time: (formData as any).timestamp || new Date(),
       type: formData.type || 'wet',
-      diaper: formData.diaper || { size: 'size1', leaked: false, rash: false },
-      mood: formData.mood || 'comfortable',
-      changedBy: formData.changedBy || 'Maman',
       notes: formData.notes,
-      wetness: formData.wetness,
-      stool: formData.stool
+      // Extended fields that don't exist in base DiaperEntry interface
+      diaper: (formData as any).diaper || { size: 'size1', leaked: false, rash: false },
+      mood: (formData as any).mood || 'comfortable',
+      changedBy: (formData as any).changedBy || 'Maman',
+      wetness: (formData as any).wetness,
+      stool: (formData as any).stool
     }
 
     onSave(newDiaper)
@@ -1087,12 +1088,12 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
 
   <input
   type="datetime-local"
-  value={(ensureDate(formData.timestamp) || new Date()).toISOString().slice(0,16)}   // "YYYY-MM-DDTHH:mm"
+  value={(ensureDate((formData as any).timestamp) || new Date()).toISOString().slice(0,16)}   // "YYYY-MM-DDTHH:mm"
   onChange={e =>
     setFormData(prev => ({
       ...prev,
       timestamp: new Date(e.target.value)
-    }))
+    } as any))
   }
   className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl
              focus:border-primary-500 focus:outline-none"
@@ -1114,7 +1115,7 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
               ].map(type => (
                 <button
                   key={type.value}
-                  onClick={() => setFormData(prev => ({ ...prev, type: type.value }))}
+                  onClick={() => setFormData(prev => ({ ...prev, type: type.value } as any))}
                   className={`p-3 rounded-xl border-2 transition-all ${
                     formData.type === type.value ? `${type.color} bg-gray-50` : 'border-gray-200'
                   }`}
@@ -1142,10 +1143,10 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
                         key={level}
                         onClick={() => setFormData(prev => ({
                           ...prev,
-                          wetness: { ...prev.wetness, level: level }
-                        }))}
+                          wetness: { ...(prev as any).wetness, level: level }
+                        } as any))}
                         className={`p-2 text-xs rounded-lg border transition-all ${
-                          formData.wetness?.level === level 
+                          (formData as any).wetness?.level === level 
                             ? 'border-primary-500 bg-primary-50' 
                             : 'border-gray-200'
                         }`}
@@ -1176,10 +1177,10 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
                         key={color.value}
                         onClick={() => setFormData(prev => ({
                           ...prev,
-                          wetness: { ...prev.wetness, color: color.value }
-                        }))}
+                          wetness: { ...(prev as any).wetness, color: color.value }
+                        } as any))}
                         className={`p-2 text-xs rounded-lg border transition-all ${
-                          formData.wetness?.color === color.value 
+                          (formData as any).wetness?.color === color.value 
                             ? 'border-primary-500 ring-2 ring-primary-200' 
                             : 'border-gray-200'
                         }`}
@@ -1211,10 +1212,10 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
                         key={color.value}
                         onClick={() => setFormData(prev => ({
                           ...prev,
-                          stool: { ...prev.stool, color: color.value }
-                        }))}
+                          stool: { ...(prev as any).stool, color: color.value }
+                        } as any))}
                         className={`p-2 text-xs rounded-lg border transition-all ${
-                          formData.stool?.color === color.value 
+                          (formData as any).stool?.color === color.value 
                             ? 'border-amber-500 ring-2 ring-amber-200' 
                             : 'border-gray-200'
                         }`}
@@ -1235,10 +1236,10 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
                         key={consistency}
                         onClick={() => setFormData(prev => ({
                           ...prev,
-                          stool: { ...prev.stool, consistency: consistency }
-                        }))}
+                          stool: { ...(prev as any).stool, consistency: consistency }
+                        } as any))}
                         className={`p-2 text-xs rounded-lg border transition-all ${
-                          formData.stool?.consistency === consistency 
+                          (formData as any).stool?.consistency === consistency 
                             ? 'border-amber-500 bg-amber-50' 
                             : 'border-gray-200'
                         }`}
@@ -1260,10 +1261,10 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
                         key={amount}
                         onClick={() => setFormData(prev => ({
                           ...prev,
-                          stool: { ...prev.stool, amount: amount }
-                        }))}
+                          stool: { ...(prev as any).stool, amount: amount }
+                        } as any))}
                         className={`p-2 text-xs rounded-lg border transition-all ${
-                          formData.stool?.amount === amount 
+                          (formData as any).stool?.amount === amount 
                             ? 'border-amber-500 bg-amber-50' 
                             : 'border-gray-200'
                         }`}
@@ -1290,11 +1291,11 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
                 <div>
                   <label className="block text-xs  mb-2">Taille couche</label>
                   <select
-                    value={formData.diaper?.size || 'size1'}
+                    value={(formData as any).diaper?.size || 'size1'}
                     onChange={(e) => setFormData(prev => ({
                       ...prev,
-                      diaper: { ...prev.diaper, size: e.target.value }
-                    }))}
+                      diaper: { ...(prev as any).diaper, size: e.target.value }
+                    } as any))}
                     className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
                   >
                     <option value="newborn">Nouveau-né</option>
@@ -1312,11 +1313,11 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
                   <label className="flex items-center space-x-2 p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
                     <input
                       type="checkbox"
-                      checked={formData.diaper?.leaked || false}
+                      checked={(formData as any).diaper?.leaked || false}
                       onChange={(e) => setFormData(prev => ({
                         ...prev,
-                        diaper: { ...prev.diaper, leaked: e.target.checked }
-                      }))}
+                        diaper: { ...(prev as any).diaper, leaked: e.target.checked }
+                      } as any))}
                       className="w-4 h-4 text-primary-600"
                     />
                     <span className="text-sm">💦 Fuite</span>
@@ -1325,11 +1326,11 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
                   <label className="flex items-center space-x-2 p-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
                     <input
                       type="checkbox"
-                      checked={formData.diaper?.rash || false}
+                      checked={(formData as any).diaper?.rash || false}
                       onChange={(e) => setFormData(prev => ({
                         ...prev,
-                        diaper: { ...prev.diaper, rash: e.target.checked }
-                      }))}
+                        diaper: { ...(prev as any).diaper, rash: e.target.checked }
+                      } as any))}
                       className="w-4 h-4 text-primary-600"
                     />
                     <span className="text-sm">🔴 Rougeur</span>
@@ -1347,9 +1348,9 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
                     ].map(mood => (
                       <button
                         key={mood.value}
-                        onClick={() => setFormData(prev => ({ ...prev, mood: mood.value }))}
+                        onClick={() => setFormData(prev => ({ ...prev, mood: mood.value } as any))}
                         className={`p-2 text-xs rounded-lg border transition-all ${
-                          formData.mood === mood.value 
+                          (formData as any).mood === mood.value 
                             ? 'border-primary-500 bg-primary-50' 
                             : 'border-gray-200'
                         }`}
@@ -1366,8 +1367,8 @@ function DetailedEntryModal({ diaper, onClose, onSave, currentBaby }: {
                   <label className="block text-xs  mb-2">Changé par</label>
                   <input
                     type="text"
-                    value={formData.changedBy || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, changedBy: e.target.value }))}
+                    value={(formData as any).changedBy || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, changedBy: e.target.value } as any))}
                     className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none"
                     placeholder="Nom de la personne"
                   />

@@ -88,12 +88,12 @@ export async function GET(
 
     // Calculate live statistics
     const totalMilk = feedingEntries
-      .filter(f => f.type === 'biberon')
-      .reduce((sum, f) => sum + (f.amount || 0), 0)
+      .filter((f: any) => f.type === 'biberon')
+      .reduce((sum: number, f: any) => sum + (f.amount || 0), 0)
 
     const totalSleepMinutes = sleepEntries
-      .filter(s => s.endTime)
-      .reduce((sum, s) => {
+      .filter((s: any) => s.endTime)
+      .reduce((sum: number, s: any) => {
         const start = new Date(s.startTime).getTime()
         const end = new Date(s.endTime!).getTime()
         return sum + Math.floor((end - start) / (1000 * 60))
@@ -122,7 +122,7 @@ export async function GET(
     return NextResponse.json({
       baby: babyInfo,
       liveData: {
-        feedings: feedingEntries.map(entry => ({
+        feedings: feedingEntries.map((entry: any) => ({
           id: entry.id,
           babyId: entry.babyId,
           kind: entry.type,
@@ -133,7 +133,7 @@ export async function GET(
           mood: entry.mood,
           notes: entry.notes
         })),
-        sleeps: sleepEntries.map(entry => ({
+        sleeps: sleepEntries.map((entry: any) => ({
           id: entry.id,
           babyId: entry.babyId,
           startTime: entry.startTime,
@@ -144,7 +144,7 @@ export async function GET(
           location: entry.location,
           notes: entry.notes
         })),
-        diapers: diaperEntries.map(entry => ({
+        diapers: diaperEntries.map((entry: any) => ({
           id: entry.id,
           babyId: entry.babyId,
           time: entry.time,

@@ -176,7 +176,7 @@ class BabyTrackerIndexedDB {
     if (!this.db) await this.init()
     
     const stores = ['userProfiles', 'babies', 'feedingEntries', 'sleepEntries', 'diaperEntries', 'logs']
-    const tx = this.db!.transaction(stores, 'readwrite')
+    const tx = this.db!.transaction(stores as any, 'readwrite')
     
     await Promise.all(stores.map(store => tx.objectStore(store).clear()))
     await tx.done

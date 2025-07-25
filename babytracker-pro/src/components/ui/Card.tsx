@@ -58,10 +58,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({
     {
       'rounded-lg': rounded === 'sm',
       'rounded-xl': rounded === 'md',
-      'rounded-2xl': rounded === 'lg',
-      'rounded-2xl': rounded === 'xl',
-      'rounded-3xl': rounded === '2xl',
-      'rounded-3xl': rounded === '3xl',
+      'rounded-2xl': rounded === 'lg' || rounded === 'xl',
+      'rounded-3xl': rounded === '2xl' || rounded === '3xl',
     },
     
     // Enhanced shadow system

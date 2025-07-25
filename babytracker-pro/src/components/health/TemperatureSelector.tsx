@@ -202,31 +202,31 @@ const TemperatureSelector: React.FC<TemperatureSelectorProps> = ({
   return (
     <div className="flex flex-col items-center space-y-4">
       {/* Temperature Display */}
-      <div className={`text-center p-4 rounded-xl ${currentTempInfo.key === 'normal' ? 'bg-green-50 dark:bg-green-900/20' : 
-        currentTempInfo.key === 'lowFever' ? 'bg-yellow-50 dark:bg-yellow-900/20' :
-        ['fever', 'highFever', 'hyperthermia'].includes(currentTempInfo.key) ? 'bg-red-50 dark:bg-red-900/20' :
+      <div className={`text-center p-4 rounded-xl ${(currentTempInfo as any).key === 'normal' ? 'bg-green-50 dark:bg-green-900/20' : 
+        (currentTempInfo as any).key === 'lowFever' ? 'bg-yellow-50 dark:bg-yellow-900/20' :
+        ['fever', 'highFever', 'hyperthermia'].includes((currentTempInfo as any).key) ? 'bg-red-50 dark:bg-red-900/20' :
         'bg-blue-50 dark:bg-blue-900/20'}`}>
         <div className="flex items-center justify-center space-x-2 mb-2">
-          <Thermometer className={`w-5 h-5 ${currentTempInfo.key === 'normal' ? 'text-green-600' : 
-            currentTempInfo.key === 'lowFever' ? 'text-yellow-600' :
-            ['fever', 'highFever', 'hyperthermia'].includes(currentTempInfo.key) ? 'text-red-600' :
+          <Thermometer className={`w-5 h-5 ${(currentTempInfo as any).key === 'normal' ? 'text-green-600' : 
+            (currentTempInfo as any).key === 'lowFever' ? 'text-yellow-600' :
+            ['fever', 'highFever', 'hyperthermia'].includes((currentTempInfo as any).key) ? 'text-red-600' :
             'text-blue-600'}`} />
-          <span className={`text-2xl font-bold ${currentTempInfo.key === 'normal' ? 'text-green-700 dark:text-green-300' : 
-            currentTempInfo.key === 'lowFever' ? 'text-yellow-700 dark:text-yellow-300' :
-            ['fever', 'highFever', 'hyperthermia'].includes(currentTempInfo.key) ? 'text-red-700 dark:text-red-300' :
+          <span className={`text-2xl font-bold ${(currentTempInfo as any).key === 'normal' ? 'text-green-700 dark:text-green-300' : 
+            (currentTempInfo as any).key === 'lowFever' ? 'text-yellow-700 dark:text-yellow-300' :
+            ['fever', 'highFever', 'hyperthermia'].includes((currentTempInfo as any).key) ? 'text-red-700 dark:text-red-300' :
             'text-blue-700 dark:text-blue-300'}`}>
             {convertTemp(value).toFixed(1)}°{unit === 'celsius' ? 'C' : 'F'}
           </span>
         </div>
-        <div className={`text-sm font-medium ${currentTempInfo.key === 'normal' ? 'text-green-600 dark:text-green-400' : 
-          currentTempInfo.key === 'lowFever' ? 'text-yellow-600 dark:text-yellow-400' :
-          ['fever', 'highFever', 'hyperthermia'].includes(currentTempInfo.key) ? 'text-red-600 dark:text-red-400' :
+        <div className={`text-sm font-medium ${(currentTempInfo as any).key === 'normal' ? 'text-green-600 dark:text-green-400' : 
+          (currentTempInfo as any).key === 'lowFever' ? 'text-yellow-600 dark:text-yellow-400' :
+          ['fever', 'highFever', 'hyperthermia'].includes((currentTempInfo as any).key) ? 'text-red-600 dark:text-red-400' :
           'text-blue-600 dark:text-blue-400'}`}>
           {currentTempInfo.label}
         </div>
         
         {/* Warning for dangerous temperatures */}
-        {['highFever', 'hyperthermia'].includes(currentTempInfo.key) && (
+        {['highFever', 'hyperthermia'].includes((currentTempInfo as any).key) && (
           <div className="flex items-center justify-center space-x-1 mt-2 text-red-600 dark:text-red-400">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-xs font-medium">Consultez immédiatement un médecin</span>

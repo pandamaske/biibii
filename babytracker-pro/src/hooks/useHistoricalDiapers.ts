@@ -87,8 +87,8 @@ export function useHistoricalDiapers(
       // Transform the data to match our DiaperEntry interface
       const transformedDiapers = data.entries.map((entry: Record<string, unknown>) => ({
         ...entry,
-        time: new Date(entry.time),
-        timestamp: new Date(entry.time) // For backward compatibility
+        time: new Date(entry.time as any),
+        timestamp: new Date(entry.time as any) // For backward compatibility
       }))
 
       console.log('✅ Transformed diapers:', transformedDiapers.length, 'entries')

@@ -593,7 +593,7 @@ export class VaccineScheduleCalculator {
 
   static canVaccinesBeGivenTogether(vaccine1: string, vaccine2: string): boolean {
     // Most vaccines can be given together, but some exceptions exist
-    const incompatibleCombinations = [
+    const incompatibleCombinations: string[][] = [
       // Add any incompatible combinations here
     ]
     

@@ -231,10 +231,10 @@ const MedicationEntryModal: React.FC<MedicationEntryModalProps> = ({
         frequency: `Toutes les ${med.frequencyHours}h`,
         maxDaily
       }
-    } else if (med.fixedDose) {
+    } else if ((med as any).fixedDose) {
       // Fixed dose medications like Vitamin D
       return {
-        doseMg: med.fixedDose,
+        doseMg: (med as any).fixedDose,
         form: med.forms.oral?.[0],
         frequency: `1 fois par jour`,
         maxDaily: med.maxDailyDosage

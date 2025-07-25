@@ -84,8 +84,8 @@ export function useHistoricalSleeps(
       // Transform the data to match our SleepEntry interface
       const transformedSleeps = data.entries.map((entry: Record<string, unknown>) => ({
         ...entry,
-        startTime: new Date(entry.startTime),
-        endTime: entry.endTime ? new Date(entry.endTime) : undefined
+        startTime: new Date(entry.startTime as any),
+        endTime: entry.endTime ? new Date(entry.endTime as any) : undefined
       }))
 
       console.log('✅ Transformed sleeps:', transformedSleeps.length, 'entries')

@@ -201,7 +201,7 @@ const HeaderVariant3 = ({ data }: { data: any }) => {
 
         {/* Navigation tabs */}
         <div className="flex space-x-1 bg-gray-100 rounded-2xl p-1">
-          {data.pages.map((page) => {
+          {data.pages.map((page: any) => {
             const Icon = page.icon
             const isActive = page.name === data.currentPage
             return (

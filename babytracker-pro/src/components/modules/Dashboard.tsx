@@ -61,7 +61,7 @@ const Dashboard = () => {
     if (todayFeedings.length === 0) return { isLate: true, hours: 0, minutes: 0 }
     
     const lastFeeding = todayFeedings[todayFeedings.length - 1]
-    const lastFeedTime = new Date(lastFeeding.time)
+    const lastFeedTime = new Date((lastFeeding as any).time)
     const nextFeedTime = new Date(lastFeedTime.getTime() + protocol.interval * 60 * 60 * 1000)
     const diff = nextFeedTime.getTime() - currentTime.getTime()
     
@@ -186,7 +186,7 @@ const Dashboard = () => {
       </div>
 
       {/* Session en cours */}
-      {(sleepTimer.isRunning || feedingSession.isTimerRunning) && (
+      {(sleepTimer.isRunning || (feedingSession as any).isTimerRunning) && (
         <div className="bg-gradient-to-r from-emerald-50 to-primary-50 border-2 border-dashed border-emerald-300 rounded-2xl p-6 shadow-lg">
           <h3 className="font-semibold mb-4 text-emerald-800 flex items-center space-x-2">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
@@ -219,7 +219,7 @@ const Dashboard = () => {
             </div>
           )}
           
-          {feedingSession.isTimerRunning && (
+          {(feedingSession as any).isTimerRunning && (
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="bg-blue-100 rounded-full p-3">

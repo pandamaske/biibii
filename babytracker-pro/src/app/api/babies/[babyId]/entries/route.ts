@@ -201,7 +201,7 @@ export async function GET(
         skip,
         take: limit
       })
-      entries.push(...feedingEntries.map(entry => ({ ...entry, type: 'feeding' })))
+      entries.push(...feedingEntries.map((entry: any) => ({ ...entry, type: 'feeding' })))
     }
 
     if (!entryType || entryType === 'sleep') {
@@ -215,7 +215,7 @@ export async function GET(
         skip,
         take: limit
       })
-      entries.push(...sleepEntries.map(entry => ({ ...entry, type: 'sleep' })))
+      entries.push(...sleepEntries.map((entry: any) => ({ ...entry, type: 'sleep' })))
     }
 
     if (!entryType || entryType === 'diaper') {
@@ -229,7 +229,7 @@ export async function GET(
         skip,
         take: limit
       })
-      entries.push(...diaperEntries.map(entry => ({ ...entry, type: 'diaper' })))
+      entries.push(...diaperEntries.map((entry: any) => ({ ...entry, type: 'diaper' })))
     }
 
     if (!entryType || entryType === 'growth') {
@@ -242,7 +242,7 @@ export async function GET(
         skip,
         take: limit
       })
-      entries.push(...growthEntries.map(entry => ({ ...entry, type: 'growth' })))
+      entries.push(...growthEntries.map((entry: any) => ({ ...entry, type: 'growth' })))
     }
 
 entries.sort((a, b) => {

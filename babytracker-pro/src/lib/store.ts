@@ -2,7 +2,7 @@
 'use client'
 
 import { create } from 'zustand'
-import { Baby, FeedingEntry, SleepEntry, DiaperEntry, Alert, ChecklistItem, DailyChecklist, TaskTemplate, GrowthEntry } from './types'
+import { Baby, FeedingEntry, SleepEntry, DiaperEntry, Alert, ChecklistItem, DailyChecklist, GrowthEntry } from './types'
 
 // ✅ Profile Types
 export interface UserProfile {
@@ -135,7 +135,7 @@ class NotificationService {
     }
 
     const now = new Date()
-    const lastFeedingTime = new Date(lastFeeding.time)
+    const lastFeedingTime = new Date((lastFeeding as any).time)
     const timeSinceLastFeeding = (now.getTime() - lastFeedingTime.getTime()) / (1000 * 60) // minutes
     
     // Repas en retard
@@ -400,7 +400,7 @@ interface BabyTrackerState {
   
   // ✅ Checklist Data
   checklists: DailyChecklist[]
-  templates: TaskTemplate[]
+  templates: any[]
   streaks: {
     current: number
     best: number
@@ -475,7 +475,7 @@ interface BabyTrackerState {
   updateTask: (checklistId: string, taskId: string, updates: Partial<ChecklistItem>) => void
   addCustomTask: (checklistId: string, task: ChecklistItem) => void
   deleteTask: (checklistId: string, taskId: string) => void
-  applyTemplate: (checklistId: string, template: TaskTemplate) => void
+  applyTemplate: (checklistId: string, template: any) => void
   updateStreak: (completed: boolean) => void
   
   // ✅ Settings Actions
@@ -590,7 +590,7 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
           const userId = state.userProfile?.id || getTempUserId()
           babyWithId = {
             ...baby,
-            id: generateBabyId(userId, state.babies)
+            id: generateBabyId(userId || '', state.babies)
           }
         }
 
@@ -837,7 +837,6 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
           babyId: state.currentBaby.id,
           startTime: startTime,
           endTime: endTime,
-          duration: durationMinutes,
           quality,
           type: durationMinutes > 120 ? 'night' : 'nap',
           notes: `Durée: ${durationMinutes}min`,
@@ -1054,7 +1053,7 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
             recommendedInterval,
             recommendedSleep,
             state.notificationSettings,
-            state.appSettings
+            state.appSettings || undefined
           )
 
           // Éviter les doublons
@@ -1175,7 +1174,6 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
                   kind: entry.type as 'biberon' | 'tétée' | 'solide',
                   amount: entry.amount || undefined,
                   startTime: new Date(entry.startTime),
-                  endTime: entry.endTime ? new Date(entry.endTime) : undefined,
                   duration: entry.duration || undefined,
                   mood: entry.mood as 'happy' | 'content' | 'difficult' || undefined,
                   notes: entry.notes || undefined
@@ -1202,8 +1200,8 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
                   id: entry.id,
                   babyId: baby.id,
                   time: new Date(entry.time),
-                  type: entry.type as 'wet' | 'dirty' | 'both',
-                  amount: entry.amount as 'small' | 'medium' | 'large' || undefined,
+                  type: entry.type as 'wet' | 'soiled' | 'mixed' | 'dry',
+                  amount: entry.amount as any || undefined,
                   color: entry.color || undefined,
                   notes: entry.notes || undefined
                 })
@@ -1362,7 +1360,7 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
       
       updateTask: (checklistId, taskId, updates) => set((state) => ({
         checklists: state.checklists.map(checklist =>
-          checklist.id === checklistId
+          (checklist as any).id === checklistId
             ? {
                 ...checklist,
                 items: checklist.items.map(task =>
@@ -1375,7 +1373,7 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
       
       addCustomTask: (checklistId, task) => set((state) => ({
         checklists: state.checklists.map(checklist =>
-          checklist.id === checklistId
+          (checklist as any).id === checklistId
             ? {
                 ...checklist,
                 items: [...checklist.items, task]
@@ -1386,7 +1384,7 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
       
       deleteTask: (checklistId, taskId) => set((state) => ({
         checklists: state.checklists.map(checklist =>
-          checklist.id === checklistId
+          (checklist as any).id === checklistId
             ? {
                 ...checklist,
                 items: checklist.items.filter(task => task.id !== taskId)
@@ -1396,7 +1394,7 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
       })),
       
       applyTemplate: (checklistId, template) => set((state) => {
-        const templateTasks = template.items.map((item, index) => ({
+        const templateTasks = template.items.map((item: any, index: number) => ({
           ...item,
           id: `${Date.now()}-${index}`,
           completed: false,
@@ -1405,7 +1403,7 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
         
         return {
           checklists: state.checklists.map(checklist =>
-            checklist.id === checklistId
+            (checklist as any).id === checklistId
               ? {
                   ...checklist,
                   items: [...checklist.items, ...templateTasks]
@@ -1512,7 +1510,7 @@ export const useBabyTrackerStore = create<BabyTrackerState>()((set, get) => ({
         const lastFeeding = state.getLastFeeding()
         if (!lastFeeding) return new Date()
         
-        const lastTime = ensureDate(lastFeeding.time)
+        const lastTime = ensureDate((lastFeeding as any).time)
         const nextTime = new Date(lastTime.getTime() + state.settings.feedingInterval * 60 * 60 * 1000)
         return nextTime
       },

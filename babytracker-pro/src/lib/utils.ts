@@ -143,7 +143,7 @@ export function getNextFeedingTime(lastFeeding: FeedingEntry | null, intervalHou
     return new Date() // Si pas de dernier repas, maintenant
   }
   
-  const lastTime = ensureDate(lastFeeding.time)
+  const lastTime = ensureDate((lastFeeding as any).time)
   return new Date(lastTime.getTime() + intervalHours * 60 * 60 * 1000)
 }
 
@@ -158,7 +158,7 @@ export function getTimeSinceLastFeeding(lastFeeding: FeedingEntry | null): strin
   if (!lastFeeding) return 'Aucun repas enregistré'
   
   const now = new Date()
-  const lastTime = ensureDate(lastFeeding.time)
+  const lastTime = ensureDate((lastFeeding as any).time)
   const diffMinutes = Math.floor((now.getTime() - lastTime.getTime()) / (1000 * 60))
   
   return formatDuration(diffMinutes)

@@ -112,13 +112,13 @@ const NotificationPanel = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =
             {notifications.slice(0, 10).map((notification) => {
               const NotificationContent = notification.actionUrl ? Link : 'div'
               const contentProps = notification.actionUrl 
-                ? { href: notification.actionUrl, onClick: () => handleNotificationClick(notification) }
+                ? { href: notification.actionUrl as any, onClick: () => handleNotificationClick(notification) }
                 : { onClick: () => handleNotificationClick(notification) }
 
               return (
                 <NotificationContent
                   key={notification.id}
-                  {...contentProps}
+                  {...(contentProps as any)}
                   className={`block p-3 rounded-2xl border-l-4 transition-all duration-300 hover:scale-102 cursor-pointer ${
                     getPriorityColor(notification.priority)
                   } ${!notification.isRead ? 'font-medium' : 'opacity-75'}`}

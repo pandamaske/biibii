@@ -920,19 +920,19 @@ export default function SleepPage() {
           ) : (
             <div className="space-y-3">
               {todaySleeps
-                .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+                .sort((a, b) => new Date((b as any).startTime).getTime() - new Date((a as any).startTime).getTime())
                 .map((sleep) => {
                   const startDate = ensureDate(sleep.startTime)
                   const endDate = ensureDate(sleep.endTime)
                   const duration = startDate && endDate 
                     ? Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60))
                     : 0
-                  const qualityColor = getQualityColor(sleep.quality)
+                  const qualityColor = getQualityColor((sleep as any).quality)
                   const qualityObj = SLEEP_QUALITIES.find(q => q.value === sleep.quality)
                   
                   return (
                     <div
-                      key={sleep.id}
+                      key={(sleep as any).id}
                       className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300 hover-lift"
                     >
                       <div className="flex items-center space-x-4">
@@ -948,18 +948,18 @@ export default function SleepPage() {
                         
                         <div>
                           <p className="font-medium text-gray-800 dark:text-gray-200">
-                            {sleep.type === 'night' ? 'Nuit' : 'Sieste'}
+                            {(sleep as any).type === 'night' ? 'Nuit' : 'Sieste'}
                             {duration > 0 && ` • ${formatDuration(duration)}`}
                           </p>
                           <div className="flex items-center space-x-4 text-sm  dark:text-gray-400">
-                            <span>{formatTimeFromDate(sleep.startTime)}</span>
-                            {sleep.endTime && (
-                              <span>- {formatTimeFromDate(sleep.endTime)}</span>
+                            <span>{formatTimeFromDate((sleep as any).startTime)}</span>
+                            {(sleep as any).endTime && (
+                              <span>- {formatTimeFromDate((sleep as any).endTime)}</span>
                             )}
-                            <span>{safeFormatRelativeTime(sleep.startTime)}</span>
+                            <span>{safeFormatRelativeTime((sleep as any).startTime)}</span>
                           </div>
-                          {sleep.notes && (
-                            <p className="text-xs  dark:text-gray-500 mt-1">{sleep.notes}</p>
+                          {(sleep as any).notes && (
+                            <p className="text-xs  dark:text-gray-500 mt-1">{(sleep as any).notes}</p>
                           )}
                         </div>
                       </div>
@@ -990,7 +990,7 @@ export default function SleepPage() {
                         {/* Delete button */}
                         <button
                           onClick={() => {
-                            removeSleep(sleep.id)
+                            removeSleep((sleep as any).id)
                             
                             // ✅ Force refresh live data immediately
                             setTimeout(() => liveData.refresh(), 100)

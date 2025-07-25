@@ -141,7 +141,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Update in store and database
     if (updateSettings) {
-      await updateSettings({ theme: newTheme });
+      await updateSettings({ theme: newTheme } as any);
     }
   };
 
@@ -156,7 +156,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Update in store and database
     if (updateSettings) {
-      await updateSettings({ colorScheme: scheme });
+      await updateSettings({ colorScheme: scheme } as any);
     }
   };
 
@@ -171,7 +171,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Update in store and database
     if (updateSettings) {
-      await updateSettings({ fontSize: size });
+      await updateSettings({ fontSize: size } as any);
     }
   };
 

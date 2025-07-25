@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useBabyTrackerStore } from '@/lib/store'
-import { UserProfile, AppSettings } from '@/lib/types'
+import { UserProfile, AppSettings } from '@/lib/store'
 
 export function useProfile() {
   const [isLoading, setIsLoading] = useState(false)
@@ -39,7 +39,7 @@ export function useProfile() {
     setError(null)
     
     try {
-      updateAppSettings(updates)
+      updateAppSettings(updates as any)
       // Here you could add API call to sync with backend
       await new Promise(resolve => setTimeout(resolve, 300)) // Simulate API call
     } catch (err) {

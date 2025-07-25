@@ -321,7 +321,7 @@ export default function ParentHealthPage() {
     moodData[today] = {
       ...currentMoodEntry,
       timestamp: new Date().toISOString(),
-      baby_age_weeks: currentBaby ? Math.floor((new Date() - new Date(currentBaby.birthDate)) / (1000 * 60 * 60 * 24 * 7)) : 0
+      baby_age_weeks: currentBaby ? Math.floor((new Date().getTime() - new Date((currentBaby as any).birthDate).getTime()) / (1000 * 60 * 60 * 24 * 7)) : 0
     }
     
     localStorage.setItem('parent-mood-data', JSON.stringify(moodData))
@@ -331,7 +331,7 @@ export default function ParentHealthPage() {
   }, [currentMoodEntry, currentBaby])
 
   // ✅ Psychological trend analysis with clinical insights
-  const analyzeWellbeingTrends = (moodData) => {
+  const analyzeWellbeingTrends = (moodData: any) => {
     const recent7Days = Object.entries(moodData)
       .filter(([date]) => {
         const entryDate = new Date(date)
@@ -342,9 +342,9 @@ export default function ParentHealthPage() {
       .map(([_, data]) => data)
 
     if (recent7Days.length >= 3) {
-      const avgMood = recent7Days.reduce((sum, day) => sum + day.mood, 0) / recent7Days.length
-      const avgEnergy = recent7Days.reduce((sum, day) => sum + day.energy, 0) / recent7Days.length
-      const avgStress = recent7Days.reduce((sum, day) => sum + day.stress, 0) / recent7Days.length
+      const avgMood = recent7Days.reduce((sum: number, day: any) => sum + (day as any).mood, 0) / recent7Days.length
+      const avgEnergy = recent7Days.reduce((sum: number, day: any) => sum + (day as any).energy, 0) / recent7Days.length
+      const avgStress = recent7Days.reduce((sum: number, day: any) => sum + (day as any).stress, 0) / recent7Days.length
       
       // ✅ Clinical risk assessment
       if (avgMood <= 2 && avgEnergy <= 2) {
@@ -356,7 +356,7 @@ export default function ParentHealthPage() {
     }
   }
 
-  const generateAlert = (type, message) => {
+  const generateAlert = (type: string, message: string) => {
     // Integration with notification system
     console.log(`Alert: ${type} - ${message}`)
   }
@@ -364,9 +364,9 @@ export default function ParentHealthPage() {
   // ✅ Recovery progress calculation
   const calculateRecoveryScore = useMemo(() => {
     const allItems = Object.values(RECOVERY_CATEGORIES).flatMap(cat => cat.items)
-    const completedItems = allItems.filter(item => recoveryProgress[item.id])
+    const completedItems = allItems.filter(item => (recoveryProgress as any)[item.id])
     const criticalItems = allItems.filter(item => item.critical)
-    const completedCritical = criticalItems.filter(item => recoveryProgress[item.id])
+    const completedCritical = criticalItems.filter(item => (recoveryProgress as any)[item.id])
     
     return {
       overall: Math.round((completedItems.length / allItems.length) * 100),
@@ -409,7 +409,7 @@ export default function ParentHealthPage() {
                     key={level.value}
                     onClick={() => setCurrentMoodEntry(prev => ({ ...prev, [key]: level.value }))}
                     className={`w-full p-3 rounded-xl border-2 transition-all text-left ${
-                      currentMoodEntry[key] === level.value
+                      (currentMoodEntry as any)[key] === level.value
                         ? `border-${level.color}-500 bg-${level.color}-50 dark:bg-${level.color}-900/30`
                         : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
                     }`}
@@ -484,18 +484,20 @@ export default function ParentHealthPage() {
                       <button
                         onClick={() => {
                           const newGoals = { ...selfCareGoals }
-                          if (!newGoals[goal.id]) newGoals[goal.id] = { completed: false, streak: 0 }
-                          newGoals[goal.id].completed = !newGoals[goal.id].completed
+                          if (!(newGoals as any)[goal.id]) {
+                            (newGoals as any)[goal.id] = { completed: false, streak: 0 }
+                          }
+                          (newGoals as any)[goal.id].completed = !(newGoals as any)[goal.id].completed
                           setSelfCareGoals(newGoals)
                           localStorage.setItem('parent-selfcare-goals', JSON.stringify(newGoals))
                         }}
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                          selfCareGoals[goal.id]?.completed
+                          (selfCareGoals as any)[goal.id]?.completed
                             ? `bg-${domain.color}-500 border-${domain.color}-500 text-white`
                             : 'border-gray-300 hover:border-purple-400'
                         }`}
                       >
-                        {selfCareGoals[goal.id]?.completed && <CheckCircle className="w-3 h-3" />}
+                        {(selfCareGoals as any)[goal.id]?.completed && <CheckCircle className="w-3 h-3" />}
                       </button>
                     </div>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -505,11 +507,11 @@ export default function ParentHealthPage() {
                       Fréquence: {goal.frequency === 'daily' ? 'Quotidien' : 
                                  goal.frequency === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}
                     </p>
-                    {selfCareGoals[goal.id]?.streak > 0 && (
+                    {(selfCareGoals as any)[goal.id]?.streak > 0 && (
                       <div className="flex items-center space-x-1 mt-2">
                         <Award className="w-4 h-4 text-yellow-500" />
                         <span className="text-xs text-yellow-600 font-medium">
-                          {selfCareGoals[goal.id].streak} jours consécutifs
+                          {(selfCareGoals as any)[goal.id].streak} jours consécutifs
                         </span>
                       </div>
                     )}
@@ -548,23 +550,23 @@ export default function ParentHealthPage() {
                       {item.description}
                     </p>
                     
-                    {item.phone && (
+                    {(item as any).phone && (
                       <div className="flex items-center space-x-2 text-sm text-purple-600 mb-2">
                         <Phone className="w-4 h-4" />
-                        <span className="font-mono font-semibold">{item.phone}</span>
+                        <span className="font-mono font-semibold">{(item as any).phone}</span>
                       </div>
                     )}
                     
-                    {item.availability && (
+                    {(item as any).availability && (
                       <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
                         <Clock className="w-4 h-4" />
-                        <span>{item.availability}</span>
+                        <span>{(item as any).availability}</span>
                       </div>
                     )}
                     
-                    {item.specialties && (
+                    {(item as any).specialties && (
                       <div className="flex flex-wrap gap-1 mb-2">
-                        {item.specialties.map((specialty, idx) => (
+                        {(item as any).specialties.map((specialty: any, idx: number) => (
                           <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-600 text-xs rounded-full">
                             {specialty}
                           </span>
@@ -578,7 +580,7 @@ export default function ParentHealthPage() {
                   </button>
                 </div>
                 
-                {item.type === 'emergency' && (
+                {(item as any).type === 'emergency' && (
                   <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg">
                     <div className="flex items-center space-x-2 text-red-600">
                       <AlertCircle className="w-4 h-4" />
@@ -587,7 +589,7 @@ export default function ParentHealthPage() {
                   </div>
                 )}
                 
-                {item.action === 'start_breathing_exercise' && (
+                {(item as any).action === 'start_breathing_exercise' && (
                   <button 
                     onClick={() => {
                       setBreathingType('anxiety')
@@ -643,8 +645,8 @@ export default function ParentHealthPage() {
               <div>
                 <p className="text-blue-100 text-sm">Objectifs du jour</p>
                 <p className="text-2xl font-bold">
-                  {Object.values(selfCareGoals).filter(goal => goal.completed).length}/
-                  {Object.keys(SELF_CARE_DOMAINS).reduce((sum, domain) => sum + SELF_CARE_DOMAINS[domain].goals.length, 0)}
+                  {Object.values(selfCareGoals).filter((goal: any) => goal.completed).length}/
+                  {Object.keys(SELF_CARE_DOMAINS).reduce((sum: number, domain: string) => sum + (SELF_CARE_DOMAINS as any)[domain].goals.length, 0)}
                 </p>
               </div>
               <Target className="w-8 h-8 text-blue-200" />
@@ -695,7 +697,7 @@ export default function ParentHealthPage() {
                   <p className="text-sm text-red-600">
                     {Object.values(RECOVERY_CATEGORIES)
                       .flatMap(cat => cat.items)
-                      .filter(item => item.critical && !recoveryProgress[item.id])
+                      .filter(item => item.critical && !(recoveryProgress as any)[item.id])
                       .length} éléments essentiels à compléter
                   </p>
                 </div>
@@ -764,7 +766,7 @@ export default function ParentHealthPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {Object.entries(RECOVERY_CATEGORIES).map(([categoryKey, category]) => {
           const IconComponent = category.icon
-          const completedItems = category.items.filter(item => recoveryProgress[item.id])
+          const completedItems = category.items.filter(item => (recoveryProgress as any)[item.id])
           const progress = Math.round((completedItems.length / category.items.length) * 100)
           
           return (
@@ -787,24 +789,24 @@ export default function ParentHealthPage() {
                   <div key={item.id} className="flex items-start space-x-3">
                     <button
                       onClick={() => {
-                        const newProgress = { ...recoveryProgress }
+                        const newProgress: any = { ...(recoveryProgress as any) }
                         newProgress[item.id] = !newProgress[item.id]
                         setRecoveryProgress(newProgress)
                         localStorage.setItem('parent-recovery-progress', JSON.stringify(newProgress))
                       }}
                       className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                        recoveryProgress[item.id]
+                        (recoveryProgress as any)[item.id]
                           ? 'bg-green-500 border-green-500 text-white'
                           : 'border-gray-300 hover:border-green-400'
                       }`}
                     >
-                      {recoveryProgress[item.id] && <CheckCircle className="w-3 h-3" />}
+                      {(recoveryProgress as any)[item.id] && <CheckCircle className="w-3 h-3" />}
                     </button>
                     
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <span className={`text-sm font-medium ${
-                          recoveryProgress[item.id] ? 'text-green-600 line-through' : 'text-gray-800 dark:text-gray-200'
+                          (recoveryProgress as any)[item.id] ? 'text-green-600 line-through' : 'text-gray-800 dark:text-gray-200'
                         }`}>
                           {item.name}
                         </span>

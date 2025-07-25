@@ -1,12 +1,12 @@
 import { prisma } from './prisma'
-import { 
-  VaccineEntry, 
-  Appointment, 
-  SymptomEntry, 
-  MedicationEntry,
-  DevelopmentalMilestone,
-  HealthAlert 
-} from './types'
+// import { 
+//   VaccineEntry, 
+//   Appointment, 
+//   SymptomEntry, 
+//   MedicationEntry,
+//   DevelopmentalMilestone,
+//   HealthAlert 
+// } from './types'
 
 export class HealthService {
   
@@ -19,7 +19,7 @@ export class HealthService {
     })
 
     // Group by age groups for timeline display
-    const grouped = vaccines.reduce((acc: any, vaccine) => {
+    const grouped = vaccines.reduce((acc: any, vaccine: any) => {
       const group = vaccine.ageGroup || 'other'
       if (!acc[group]) acc[group] = []
       acc[group].push(vaccine)
@@ -29,7 +29,7 @@ export class HealthService {
     return { vaccines, grouped }
   }
 
-  static async createVaccineEntry(data: Partial<VaccineEntry>) {
+  static async createVaccineEntry(data: any) {
     return await prisma.vaccineEntry.create({ data })
   }
 
