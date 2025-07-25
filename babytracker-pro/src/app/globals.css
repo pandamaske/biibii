@@ -406,6 +406,45 @@ h1, h2, h3, h4, h5, h6 {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+/* Enhanced Header Styling for Pistachio Theme */
+.theme-forest header,
+:root[data-theme="forest"] header,
+.theme-pistacchio header {
+  background: linear-gradient(135deg, 
+    rgba(15, 36, 26, 0.95) 0%,
+    rgba(10, 29, 18, 0.90) 50%,
+    rgba(5, 17, 8, 0.85) 100%
+  ) !important;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-bottom: 1px solid rgba(108, 199, 164, 0.1) !important;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Header Text Colors for Pistachio Theme */
+.theme-forest header h1,
+:root[data-theme="forest"] header h1,
+.theme-pistacchio header h1 {
+  background: linear-gradient(135deg, #6CC7A4 0%, #55BE95 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.theme-forest header .text-sm,
+:root[data-theme="forest"] header .text-sm,
+.theme-pistacchio header .text-sm {
+  color: #A0B5A8 !important;
+}
+
+.theme-forest header .w-6.h-6,
+:root[data-theme="forest"] header .w-6.h-6,
+.theme-pistacchio header .w-6.h-6 {
+  color: #A0B5A8;
+}
+
 /* Navigation Glass Effects */
 .theme-forest .nav-glass,
 :root[data-theme="forest"] .nav-glass,
@@ -414,13 +453,106 @@ h1, h2, h3, h4, h5, h6 {
     rgba(45, 80, 60, 0.85) 0%,
     rgba(28, 65, 45, 0.90) 50%,
     rgba(15, 35, 22, 0.95) 100%
-  );
+  ) !important;
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
-  border-top: 1px solid rgba(108, 199, 164, 0.1);
+  border-top: 1px solid rgba(108, 199, 164, 0.1) !important;
   box-shadow: 
     0 -8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Navigation Item Colors for Pistachio Theme */
+.theme-forest nav a,
+:root[data-theme="forest"] nav a,
+.theme-pistacchio nav a {
+  color: #8FA392;
+  transition: all 0.3s ease;
+}
+
+.theme-forest nav a:hover,
+:root[data-theme="forest"] nav a:hover,
+.theme-pistacchio nav a:hover {
+  color: #A0B5A8;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.theme-forest nav a.active,
+:root[data-theme="forest"] nav a.active,
+.theme-pistacchio nav a.active {
+  color: #6CC7A4 !important;
+  background: rgba(108, 199, 164, 0.1) !important;
+}
+
+/* Status Bar Styling for Pistachio Theme */
+.theme-forest .status-bar,
+:root[data-theme="forest"] .status-bar,
+.theme-pistacchio .status-bar {
+  color: #F0F9F6;
+}
+
+/* Page Title Styling */
+.theme-forest .page-title,
+:root[data-theme="forest"] .page-title,
+.theme-pistacchio .page-title {
+  color: #F0F9F6;
+  font-weight: 600;
+}
+
+/* Back Button and Search Button */
+.theme-forest .back-btn,
+.theme-forest .search-btn,
+:root[data-theme="forest"] .back-btn,
+:root[data-theme="forest"] .search-btn,
+.theme-pistacchio .back-btn,
+.theme-pistacchio .search-btn {
+  color: #6CC7A4;
+}
+
+/* Notification Panel for Pistachio Theme */
+.theme-forest .notification-panel,
+:root[data-theme="forest"] .notification-panel,
+.theme-pistacchio .notification-panel {
+  background: linear-gradient(135deg, 
+    rgba(15, 36, 26, 0.95) 0%,
+    rgba(10, 29, 18, 0.90) 50%,
+    rgba(5, 17, 8, 0.85) 100%
+  );
+  border: 1px solid rgba(108, 199, 164, 0.15);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+}
+
+/* Profile Dropdown for Pistachio Theme */
+.theme-forest .profile-dropdown,
+:root[data-theme="forest"] .profile-dropdown,
+.theme-pistacchio .profile-dropdown {
+  background: linear-gradient(135deg, 
+    rgba(15, 36, 26, 0.95) 0%,
+    rgba(10, 29, 18, 0.90) 50%,
+    rgba(5, 17, 8, 0.85) 100%
+  );
+  border: 1px solid rgba(108, 199, 164, 0.15);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+}
+
+/* Header Notification Bell and Profile Text */
+.theme-forest header .notification-text,
+.theme-forest header .profile-text,
+:root[data-theme="forest"] header .notification-text,
+:root[data-theme="forest"] header .profile-text,
+.theme-pistacchio header .notification-text,
+.theme-pistacchio header .profile-text {
+  color: #F0F9F6;
+}
+
+/* Home Indicator Style for Pistachio Theme */
+.theme-forest .home-indicator,
+:root[data-theme="forest"] .home-indicator,
+.theme-pistacchio .home-indicator {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
 }
 
 /* Status Indicators */

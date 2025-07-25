@@ -252,7 +252,7 @@ export default function Header({ currentPage, className = '' }: HeaderProps) {
   }
 
   return (
-    <header className={`sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 border-b border-white/20 dark:border-gray-700/50 shadow-lg ${className}`}>
+    <header className={`sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 theme-forest:bg-forest-600/90 theme-pistacchio:bg-forest-600/90 border-b border-white/20 dark:border-gray-700/50 theme-forest:border-mint-400/10 theme-pistacchio:border-mint-400/10 shadow-lg ${className}`}>
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           {/* ✅ Logo + Page Title + Theme Switch */}
