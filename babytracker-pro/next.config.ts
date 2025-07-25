@@ -7,10 +7,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  outputFileTracing: false,
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma']
-  }
+  output: 'standalone',
+  serverExternalPackages: ['@prisma/client', 'prisma']
 };
 
 export default nextConfig;
