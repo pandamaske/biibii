@@ -5,7 +5,7 @@ import { useBabyTrackerStore } from '@/lib/store'
 import { useLiveBabyData } from '@/hooks/useLiveBabyData'
 import { useWeeklySleeps, useSleepAnalytics } from '@/hooks/useHistoricalSleeps'
 import { formatTime, formatDuration, getAgeInWeeks, getRecommendedDailySleep } from '@/lib/utils'
-import { Moon, Play, Square, Clock, Sun, Bed, Star, AlertCircle, Baby, Trash2, Edit3, Save, X, Calendar } from 'lucide-react'
+import { Moon, Play, Square, Clock, Sun, Bed, Star, AlertCircle, Baby, Trash2, Edit3, Save, X, Calendar, RefreshCw } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 
 // Sleep quality options with descriptions
@@ -529,6 +529,12 @@ export default function SleepPage() {
   // ✅ Historical data hooks for weekly and analytics views
   const weeklyData = useWeeklySleeps()
   const analyticsData = useSleepAnalytics()
+  
+  console.log('Sleep Page: Data loading states:', { 
+    liveData: { loading: liveData.loading, error: liveData.error, hasData: !!liveData.liveData.sleeps.length },
+    weeklyData: { loading: weeklyData.loading, error: weeklyData.error, hasData: !!weeklyData.sleeps.length },
+    analyticsData: { loading: analyticsData.loading, error: analyticsData.error, hasData: !!analyticsData.sleeps.length }
+  })
 
   // Initialize data on mount
   useEffect(() => {
@@ -567,6 +573,36 @@ export default function SleepPage() {
     setTimer(sleepTimer.seconds)
   }, [sleepTimer.seconds])
 
+  // Enhanced error and loading UI components
+  const renderLoadingState = (message: string) => (
+    <div className="flex items-center justify-center py-12">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+          Chargement des données de sommeil...
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{message}</p>
+      </div>
+    </div>
+  )
+
+  const renderErrorState = (error: string, onRetry: () => void) => (
+    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 mb-6">
+      <div className="flex items-center space-x-3 mb-4">
+        <AlertCircle className="w-6 h-6 text-red-500" />
+        <h3 className="font-semibold text-red-800 dark:text-red-200">Erreur de chargement</h3>
+      </div>
+      <p className="text-red-700 dark:text-red-300 text-sm mb-4">{error}</p>
+      <button
+        onClick={onRetry}
+        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+      >
+        <RefreshCw className="w-4 h-4" />
+        <span>Réessayer</span>
+      </button>
+    </div>
+  )
+
   if (!currentBaby) {
     return (
       <AppLayout>
@@ -576,6 +612,22 @@ export default function SleepPage() {
             <Baby className="w-16 h-16 mx-auto  dark:text-gray-500 mb-4 animate-float" />
             <p className="text-gray-600 dark:text-gray-400">Créez d'abord le profil de votre bébé</p>
           </div>
+        </div>
+      </AppLayout>
+    )
+  }
+
+  // Show loading screen during initial load
+  const isInitialLoad = (liveData.loading && liveData.liveData.sleeps.length === 0) ||
+                       (weeklyData.loading && weeklyData.sleeps.length === 0) ||
+                       (analyticsData.loading && analyticsData.sleeps.length === 0)
+
+  if (isInitialLoad) {
+    return (
+      <AppLayout>
+        <div className="p-6">
+          <h1 className="text-4xl font-bold mb-8 gradient-text text-center">Sommeil</h1>
+          {renderLoadingState('Récupération des données de sommeil et statistiques')}
         </div>
       </AppLayout>
     )
@@ -677,6 +729,20 @@ export default function SleepPage() {
       showHeader={true}
     >
       <div className="p-6 space-y-8">
+        {/* Error state display */}
+        {liveData.error && renderErrorState(liveData.error, () => {
+          console.log('Sleep Page: Manually refreshing live data...')
+          window.dispatchEvent(new Event('refresh-live-data'))
+        })}
+        {weeklyData.error && renderErrorState(weeklyData.error, () => {
+          console.log('Sleep Page: Manually refreshing weekly data...')
+          weeklyData.refetch()
+        })}
+        {analyticsData.error && renderErrorState(analyticsData.error, () => {
+          console.log('Sleep Page: Manually refreshing analytics data...')
+          analyticsData.refetch()
+        })}
+        
         {/* Active Sleep Session */}
         {sleepTimer.isRunning && (
           <div className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30 border-2 border-purple-200 dark:border-purple-700 rounded-3xl p-6 shadow-large animate-slide-up">
@@ -902,6 +968,9 @@ export default function SleepPage() {
             <h3 className="text-lg font-semibold dark:text-gray-200 flex items-center space-x-2">
               <Clock className="w-5 h-5  dark:text-gray-400" />
               <span>Aujourd'hui ({sleepSessions})</span>
+              {liveData.loading && (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+              )}
             </h3>
             
             {totalSleep > 0 && (
@@ -911,7 +980,12 @@ export default function SleepPage() {
             )}
           </div>
 
-          {todaySleeps.length === 0 ? (
+          {liveData.loading && todaySleeps.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
+              <span className="text-gray-600 dark:text-gray-400">Chargement des données de sommeil...</span>
+            </div>
+          ) : todaySleeps.length === 0 ? (
             <div className="text-center py-8  dark:text-gray-400">
               <Moon className="w-12 h-12 mx-auto mb-4 opacity-30 animate-float" />
               <p className="font-medium">Aucun sommeil enregistré aujourd'hui</p>

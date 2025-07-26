@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { 
   Heart, 
   Thermometer, 
@@ -50,7 +50,15 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
     summary: null
   })
   const [babyInfo, setBabyInfo] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState({
+    baby: false,
+    vaccines: false,
+    appointments: false,
+    symptoms: false,
+    medications: false,
+    providers: false
+  })
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   
   // Modal states
@@ -75,49 +83,113 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
     { icon: Phone, label: 'Appeler', color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400', action: 'callDoctor' },
   ]
 
-  // Load health data
-  useEffect(() => {
-    const loadHealthData = async () => {
+  // Enhanced data loading with better error handling and progressive loading
+  const loadDataWithRetry = useCallback(async (url: string, retries = 2): Promise<any> => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        setLoading(true)
-        
-        const [babyRes, vaccinesRes, appointmentsRes, symptomsRes, medicationsRes, providersRes] = await Promise.all([
-          fetch(`/api/babies/${babyId}`),
-          fetch(`/api/health/vaccines?babyId=${babyId}`),
-          fetch(`/api/health/appointments?babyId=${babyId}`),
-          fetch(`/api/health/symptoms?babyId=${babyId}&limit=5`),
-          fetch(`/api/health/medications?babyId=${babyId}&active=true`),
-          fetch('/api/health/providers')
-        ])
-
-        const [baby, vaccines, appointments, symptoms, medications, providers] = await Promise.all([
-          babyRes.ok ? babyRes.json() : null,
-          vaccinesRes.ok ? vaccinesRes.json() : [],
-          appointmentsRes.ok ? appointmentsRes.json() : [],
-          symptomsRes.ok ? symptomsRes.json() : [],
-          medicationsRes.ok ? medicationsRes.json() : [],
-          providersRes.ok ? providersRes.json() : []
-        ])
-
-        setBabyInfo(baby)
-        setHealthData({
-          vaccines: Array.isArray(vaccines) ? vaccines : [],
-          appointments: Array.isArray(appointments) ? appointments : [],
-          symptoms: Array.isArray(symptoms) ? symptoms : [],
-          medications: Array.isArray(medications) ? medications : [],
-          providers: Array.isArray(providers) ? providers : []
-        })
+        const response = await fetch(url)
+        if (response.ok) {
+          return await response.json()
+        }
+        if (response.status === 404) {
+          return [] // Return empty array for 404s
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       } catch (error) {
-        console.error('Error loading health data:', error)
-      } finally {
-        setLoading(false)
+        if (attempt === retries) {
+          console.error(`Failed to fetch ${url} after ${retries + 1} attempts:`, error)
+          throw error
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1))) // Exponential backoff
+      }
+    }
+  }, [])
+
+  const loadBabyInfo = useCallback(async () => {
+    try {
+      console.log('loadBabyInfo: Starting for babyId:', babyId)
+      setLoading(prev => ({ ...prev, baby: true }))
+      setErrors(prev => ({ ...prev, baby: '' }))
+      
+      const baby = await loadDataWithRetry(`/api/babies/${babyId}`)
+      console.log('loadBabyInfo: Success, baby data:', baby)
+      setBabyInfo(baby)
+    } catch (error) {
+      console.error('loadBabyInfo: Error:', error)
+      setErrors(prev => ({ ...prev, baby: 'Failed to load baby information' }))
+    } finally {
+      console.log('loadBabyInfo: Setting baby loading to false')
+      setLoading(prev => ({ ...prev, baby: false }))
+    }
+  }, [babyId, loadDataWithRetry])
+
+  const loadHealthSection = useCallback(async (section: string, url: string) => {
+    try {
+      console.log(`loadHealthSection: Starting ${section} from ${url}`)
+      setLoading(prev => ({ ...prev, [section]: true }))
+      setErrors(prev => ({ ...prev, [section]: '' }))
+      
+      const data = await loadDataWithRetry(url)
+      console.log(`loadHealthSection: Success for ${section}, data length:`, Array.isArray(data) ? data.length : 'not array')
+      setHealthData((prev: any) => ({
+        ...prev,
+        [section]: Array.isArray(data) ? data : []
+      }))
+    } catch (error) {
+      console.error(`loadHealthSection: Error for ${section}:`, error)
+      setErrors(prev => ({ ...prev, [section]: `Failed to load ${section}` }))
+      setHealthData((prev: any) => ({ ...prev, [section]: [] }))
+    } finally {
+      console.log(`loadHealthSection: Setting ${section} loading to false`)
+      setLoading(prev => ({ ...prev, [section]: false }))
+    }
+  }, [loadDataWithRetry])
+
+  // Load critical data first (baby info), then other sections
+  useEffect(() => {
+    if (!babyId) {
+      console.log('HealthDashboard: No babyId provided, skipping data load')
+      return
+    }
+
+    console.log('HealthDashboard: Starting data load for babyId:', babyId)
+
+    const loadAllData = async () => {
+      try {
+        // Load baby info first as it's needed for other components
+        console.log('HealthDashboard: Loading baby info...')
+        await loadBabyInfo()
+        
+        // Load critical health data in parallel
+        console.log('HealthDashboard: Loading critical health data...')
+        const criticalDataPromises = [
+          loadHealthSection('vaccines', `/api/health/vaccines?babyId=${babyId}`),
+          loadHealthSection('symptoms', `/api/health/symptoms?babyId=${babyId}&limit=5`),
+          loadHealthSection('medications', `/api/health/medications?babyId=${babyId}&active=true`)
+        ]
+        
+        // Load non-critical data with slight delay
+        const nonCriticalDataPromises = [
+          loadHealthSection('appointments', `/api/health/appointments?babyId=${babyId}`),
+          loadHealthSection('providers', '/api/health/providers')
+        ]
+        
+        // Execute critical data loading
+        await Promise.all(criticalDataPromises)
+        console.log('HealthDashboard: Critical data loaded')
+        
+        // Execute non-critical data loading after a short delay
+        setTimeout(() => {
+          console.log('HealthDashboard: Loading non-critical data...')
+          Promise.all(nonCriticalDataPromises)
+        }, 100)
+      } catch (error) {
+        console.error('HealthDashboard: Error in loadAllData:', error)
       }
     }
 
-    if (babyId) {
-      loadHealthData()
-    }
-  }, [babyId])
+    loadAllData()
+  }, [babyId, loadBabyInfo, loadHealthSection])
 
   // Keyboard navigation
   useEffect(() => {
@@ -196,8 +268,8 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
     }
   }
 
-  // Data save handlers
-  const handleSaveVaccine = async (vaccineData: VaccineEntryData) => {
+  // Optimized save handlers with immediate UI updates
+  const handleSaveVaccine = useCallback(async (vaccineData: VaccineEntryData) => {
     try {
       setSaving(true)
       const response = await fetch('/api/health/vaccines', {
@@ -211,20 +283,21 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
       })
 
       if (response.ok) {
-        // Reload vaccines data
-        const vaccinesRes = await fetch(`/api/health/vaccines?babyId=${babyId}`)
-        const vaccines = vaccinesRes.ok ? await vaccinesRes.json() : []
-        setHealthData((prev: any) => ({ ...prev, vaccines: Array.isArray(vaccines) ? vaccines : [] }))
+        // Reload just vaccines data efficiently
+        await loadHealthSection('vaccines', `/api/health/vaccines?babyId=${babyId}`)
         
         setShowVaccineModal(false)
         setEditingItem(null)
+      } else {
+        throw new Error('Failed to save vaccine')
       }
     } catch (error) {
       console.error('Error saving vaccine:', error)
+      setErrors(prev => ({ ...prev, vaccines: 'Failed to save vaccine data' }))
     } finally {
       setSaving(false)
     }
-  }
+  }, [editingItem, babyId, loadHealthSection])
 
   const handleSaveMedication = async (medicationData: MedicationEntryData) => {
     try {
@@ -274,15 +347,8 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         const savedMedication = await response.json()
         console.log('Medication saved successfully:', savedMedication)
         
-        // Reload medications data
-        const medicationsRes = await fetch(`/api/health/medications?babyId=${babyId}`)
-        if (medicationsRes.ok) {
-          const medications = await medicationsRes.json()
-          setHealthData((prev: any) => ({ 
-            ...prev, 
-            medications: Array.isArray(medications) ? medications : [] 
-          }))
-        }
+        // Reload just medications data efficiently
+        await loadHealthSection('medications', `/api/health/medications?babyId=${babyId}`)
         
         setShowMedicationModal(false)
         setEditingItem(null)
@@ -329,15 +395,8 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         const savedDose = await response.json()
         console.log('Dose recorded successfully:', savedDose)
         
-        // Reload medications data to show updated dose history
-        const medicationsRes = await fetch(`/api/health/medications?babyId=${babyId}`)
-        if (medicationsRes.ok) {
-          const medications = await medicationsRes.json()
-          setHealthData((prev: any) => ({ 
-            ...prev, 
-            medications: Array.isArray(medications) ? medications : [] 
-          }))
-        }
+        // Reload just medications data efficiently
+        await loadHealthSection('medications', `/api/health/medications?babyId=${babyId}`)
         
         alert('Dose enregistrée avec succès!')
       } else {
@@ -353,7 +412,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
     }
   }
 
-  const handleSaveSymptom = async (symptomData: SymptomAssessmentData) => {
+  const handleSaveSymptom = useCallback(async (symptomData: SymptomAssessmentData) => {
     try {
       setSaving(true)
       const response = await fetch('/api/health/symptoms', {
@@ -366,20 +425,53 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
       })
 
       if (response.ok) {
-        // Reload symptoms data
-        const symptomsRes = await fetch(`/api/health/symptoms?babyId=${babyId}&limit=5`)
-        const symptoms = symptomsRes.ok ? await symptomsRes.json() : []
-        setHealthData((prev: any) => ({ ...prev, symptoms: Array.isArray(symptoms) ? symptoms : [] }))
+        // Reload just symptoms data efficiently
+        await loadHealthSection('symptoms', `/api/health/symptoms?babyId=${babyId}&limit=5`)
         
         setShowSymptomModal(false)
+      } else {
+        throw new Error('Failed to save symptom')
       }
     } catch (error) {
       console.error('Error saving symptom:', error)
+      setErrors(prev => ({ ...prev, symptoms: 'Failed to save symptom data' }))
     } finally {
       setSaving(false)
     }
-  }
+  }, [babyId, loadHealthSection])
 
+  // Computed loading states for better UX
+  const isMainLoading = useMemo(() => loading.baby || loading.vaccines || loading.symptoms, [loading.baby, loading.vaccines, loading.symptoms])
+  const hasAnyErrors = useMemo(() => Object.values(errors).some(error => error), [errors])
+  const isDataReady = useMemo(() => babyInfo && !isMainLoading, [babyInfo, isMainLoading])
+
+  // Retry failed data loads
+  const retryFailedLoads = useCallback(() => {
+    Object.entries(errors).forEach(([section, error]) => {
+      if (error) {
+        switch (section) {
+          case 'baby':
+            loadBabyInfo()
+            break
+          case 'vaccines':
+            loadHealthSection('vaccines', `/api/health/vaccines?babyId=${babyId}`)
+            break
+          case 'symptoms':
+            loadHealthSection('symptoms', `/api/health/symptoms?babyId=${babyId}&limit=5`)
+            break
+          case 'medications':
+            loadHealthSection('medications', `/api/health/medications?babyId=${babyId}&active=true`)
+            break
+          case 'appointments':
+            loadHealthSection('appointments', `/api/health/appointments?babyId=${babyId}`)
+            break
+          case 'providers':
+            loadHealthSection('providers', '/api/health/providers')
+            break
+        }
+      }
+    })
+  }, [errors, babyId, loadBabyInfo, loadHealthSection])
 
   const HealthOverview = () => (
     <div className="space-y-6">
@@ -1000,7 +1092,58 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         )}
       </div>
 
-      {renderTabContent()}
+      {/* Global Loading State */}
+      {isMainLoading && (
+        <div className="glass-card rounded-2xl p-8 flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600 mb-4"></div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Chargement des données de santé...
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+            Récupération des informations de vaccination, symptômes et médicaments
+          </p>
+        </div>
+      )}
+
+      {/* Global Error State */}
+      {hasAnyErrors && !isMainLoading && (
+        <div className="glass-card rounded-2xl p-6 border border-red-200 dark:border-red-800">
+          <div className="flex items-start space-x-3">
+            <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
+                Erreur de chargement
+              </h3>
+              <div className="space-y-1 mb-4">
+                {Object.entries(errors).map(([section, error]) => (
+                  error && (
+                    <p key={section} className="text-sm text-red-700 dark:text-red-300">
+                      • {error}
+                    </p>
+                  )
+                ))}
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={retryFailedLoads}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Réessayer
+                </button>
+                <button
+                  onClick={() => setErrors({})}
+                  className="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  Ignorer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Content */}
+      {isDataReady && renderTabContent()}
 
       {/* Loading Overlay */}
       <LoadingOverlay />

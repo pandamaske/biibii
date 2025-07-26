@@ -11,7 +11,7 @@ import {
   Shield, Lightbulb, Phone, Calendar, Award, TrendingUp,
   MessageCircle, Star, ChevronRight, ChevronDown, Plus,
   Edit3, Trash2, Save, X, Info, ExternalLink, Play,
-  Battery, Sun, Cloud, CloudRain, BarChart3, PieChart
+  Battery, Sun, Cloud, CloudRain, BarChart3, PieChart, RefreshCw
 } from 'lucide-react'
 
 // ✅ Evidence-based psychological assessment tools
@@ -258,6 +258,24 @@ const EXPERT_RESOURCES = {
 }
 
 export default function ParentHealthPage() {
+  // ✅ Enhanced loading states for optimized UX
+  const [loading, setLoading] = useState({
+    mood: false,
+    recovery: false,
+    goals: false,
+    initialLoad: true
+  })
+  const [errors, setErrors] = useState({
+    mood: null as string | null,
+    recovery: null as string | null,
+    goals: null as string | null
+  })
+  const [saving, setSaving] = useState({
+    mood: false,
+    recovery: false,
+    goals: false
+  })
+
   // ✅ State management for comprehensive tracking
   const [selectedMoodDate, setSelectedMoodDate] = useState(new Date().toISOString().split('T')[0])
   const [currentMoodEntry, setCurrentMoodEntry] = useState({
@@ -283,21 +301,80 @@ export default function ParentHealthPage() {
   
   const { userProfile, currentBaby } = useBabyTrackerStore()
 
-  // ✅ Load saved data from database
+  // ✅ Enhanced data loading with retry logic and error handling  
+  const loadDataWithRetry = useCallback(async (url: string, retries = 2): Promise<any> => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        console.log(`Parent Health: Loading data from ${url} (attempt ${attempt + 1})`)
+        const response = await fetch(url)
+        if (response.ok) {
+          const data = await response.json()
+          console.log(`Parent Health: Successfully loaded data from ${url}:`, data)
+          return data
+        }
+        if (response.status === 404) {
+          console.log(`Parent Health: No data found at ${url} (404)`)
+          return null // Return null for 404s to indicate no data
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      } catch (error) {
+        console.error(`Parent Health: Error loading ${url} (attempt ${attempt + 1}):`, error)
+        if (attempt === retries) {
+          throw error
+        }
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+      }
+    }
+  }, [])
+
+
+  // ✅ Load saved data from database with enhanced loading states
   useEffect(() => {
     if (userProfile?.email) {
-      loadRecoveryProgress()
-      loadSelfCareGoals()
-      loadMoodHistory()
+      const loadAllData = async () => {
+        console.log('Parent Health: Starting comprehensive data load for user:', userProfile.email)
+        console.log('Parent Health: Initial loading states:', { mood: loading.mood, recovery: loading.recovery, goals: loading.goals })
+        
+        // Critical data first
+        console.log('Parent Health: Loading critical data (mood, recovery)...')
+        await Promise.all([
+          loadMoodHistory(),
+          loadRecoveryProgress()
+        ])
+        
+        // Non-critical data with slight delay
+        console.log('Parent Health: Loading non-critical data (goals) with delay...')
+        setTimeout(() => {
+          loadSelfCareGoals()
+        }, 300)
+        
+        // Mark initial load as complete
+        setTimeout(() => {
+          console.log('Parent Health: Initial load completed')
+          setLoading(prev => ({ ...prev, initialLoad: false }))
+        }, 1000)
+      }
+      
+      loadAllData()
+    } else {
+      console.log('Parent Health: No user profile or email available, skipping data load')
     }
   }, [userProfile?.email])
 
-  // ✅ Load mood history from database
+  // ✅ Enhanced mood history loading with error handling
   const loadMoodHistory = useCallback(async () => {
+    if (!userProfile?.email) return
+    
+    setLoading(prev => ({ ...prev, mood: true }))
+    setErrors(prev => ({ ...prev, mood: null }))
+    
     try {
-      const response = await fetch(`/api/parent-health/mood?userEmail=${encodeURIComponent(userProfile?.email || '')}`)
-      if (response.ok) {
-        const data = await response.json()
+      console.log('Parent Health: Loading mood history...')
+      const url = `/api/parent-health/mood?userEmail=${encodeURIComponent(userProfile.email)}`
+      const data = await loadDataWithRetry(url)
+      
+      if (data) {
         const moodData: any = {}
         
         // Process mental health data
@@ -334,35 +411,66 @@ export default function ParentHealthPage() {
           })
           setIsEditingExisting(true)
         }
+        
+        console.log('Parent Health: Mood history loaded successfully')
       }
     } catch (error) {
-      console.error('Error loading mood history:', error)
+      console.error('Parent Health: Error loading mood history:', error)
+      setErrors(prev => ({ ...prev, mood: error instanceof Error ? error.message : 'Erreur de chargement' }))
+    } finally {
+      setLoading(prev => ({ ...prev, mood: false }))
     }
-  }, [userProfile?.email])
+  }, [userProfile?.email, loadDataWithRetry])
 
-  const loadRecoveryProgress = async () => {
+  const loadRecoveryProgress = useCallback(async () => {
+    if (!userProfile?.email) return
+    
+    setLoading(prev => ({ ...prev, recovery: true }))
+    setErrors(prev => ({ ...prev, recovery: null }))
+    
     try {
-      const response = await fetch(`/api/parent-health/recovery?userEmail=${encodeURIComponent(userProfile?.email || '')}`)
-      if (response.ok) {
-        const data = await response.json()
-        setRecoveryProgress(data.data.recoveryProgress || {})
+      console.log('Parent Health: Loading recovery progress...')
+      const url = `/api/parent-health/recovery?userEmail=${encodeURIComponent(userProfile.email)}`
+      const data = await loadDataWithRetry(url)
+      
+      if (data) {
+        setRecoveryProgress(data.data?.recoveryProgress || {})
+        console.log('Parent Health: Recovery progress loaded successfully')
+      } else {
+        setRecoveryProgress({})
       }
     } catch (error) {
-      console.error('Error loading recovery progress:', error)
+      console.error('Parent Health: Error loading recovery progress:', error)
+      setErrors(prev => ({ ...prev, recovery: error instanceof Error ? error.message : 'Erreur de chargement' }))
+    } finally {
+      setLoading(prev => ({ ...prev, recovery: false }))
     }
-  }
+  }, [userProfile?.email, loadDataWithRetry])
 
-  const loadSelfCareGoals = async () => {
+  const loadSelfCareGoals = useCallback(async () => {
+    if (!userProfile?.email) return
+    
+    setLoading(prev => ({ ...prev, goals: true }))
+    setErrors(prev => ({ ...prev, goals: null }))
+    
     try {
-      const response = await fetch(`/api/parent-health/goals?userEmail=${encodeURIComponent(userProfile?.email || '')}`)
-      if (response.ok) {
-        const data = await response.json()
-        setSelfCareGoals(data.data.selfCareGoals || {})
+      console.log('Parent Health: Loading self-care goals...')
+      const url = `/api/parent-health/goals?userEmail=${encodeURIComponent(userProfile.email)}`
+      const data = await loadDataWithRetry(url)
+      
+      if (data) {
+        setSelfCareGoals(data.data?.selfCareGoals || {})
+        console.log('Parent Health: Self-care goals loaded successfully')
+      } else {
+        setSelfCareGoals({})
       }
     } catch (error) {
-      console.error('Error loading self-care goals:', error)
+      console.error('Parent Health: Error loading self-care goals:', error)
+      setErrors(prev => ({ ...prev, goals: error instanceof Error ? error.message : 'Erreur de chargement' }))
+    } finally {
+      setLoading(prev => ({ ...prev, goals: false }))
     }
-  }
+  }, [userProfile?.email, loadDataWithRetry])
 
   // ✅ Psychological trend analysis with clinical insights
   const analyzeWellbeingTrends = useCallback((moodData: any) => {
@@ -393,11 +501,14 @@ export default function ParentHealthPage() {
     }
   }, [])
 
-  // ✅ Save mood entry with psychological insights
+  // ✅ Enhanced mood entry saving with loading states
   const saveMoodEntry = useCallback(async () => {
     if (!userProfile?.email) return
     
+    setSaving(prev => ({ ...prev, mood: true }))
+    
     try {
+      console.log('Parent Health: Saving mood entry...')
       const response = await fetch('/api/parent-health/mood', {
         method: 'POST',
         headers: {
@@ -418,7 +529,7 @@ export default function ParentHealthPage() {
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Mood entry saved:', data)
+        console.log('Parent Health: Mood entry saved successfully:', data)
         
         // ✅ Trigger analysis and recommendations based on database data
         analyzeWellbeingTrends(moodHistory)
@@ -430,23 +541,30 @@ export default function ParentHealthPage() {
         setIsEditingExisting(false)
         
       } else {
-        console.error('Failed to save mood entry')
+        console.error('Parent Health: Failed to save mood entry - HTTP', response.status)
+        throw new Error(`Erreur HTTP ${response.status}`)
       }
     } catch (error) {
-      console.error('Error saving mood entry:', error)
+      console.error('Parent Health: Error saving mood entry:', error)
+      setErrors(prev => ({ ...prev, mood: error instanceof Error ? error.message : 'Erreur de sauvegarde' }))
+    } finally {
+      setSaving(prev => ({ ...prev, mood: false }))
     }
-  }, [currentMoodEntry, currentBaby, userProfile?.email, analyzeWellbeingTrends, loadMoodHistory])
+  }, [currentMoodEntry, userProfile?.email, analyzeWellbeingTrends, loadMoodHistory])
 
   const generateAlert = (type: string, message: string) => {
     // Integration with notification system
     console.log(`Alert: ${type} - ${message}`)
   }
 
-  // ✅ Save recovery progress to database
+  // ✅ Enhanced recovery progress saving with loading states
   const saveRecoveryProgress = useCallback(async (newProgress: any) => {
     if (!userProfile?.email) return
     
+    setSaving(prev => ({ ...prev, recovery: true }))
+    
     try {
+      console.log('Parent Health: Saving recovery progress...')
       const response = await fetch('/api/parent-health/recovery', {
         method: 'POST',
         headers: {
@@ -459,22 +577,29 @@ export default function ParentHealthPage() {
       })
       
       if (response.ok) {
-        console.log('Recovery progress saved')
+        console.log('Parent Health: Recovery progress saved successfully')
         // Update local state to reflect saved data
         setRecoveryProgress(newProgress)
       } else {
-        console.error('Failed to save recovery progress')
+        console.error('Parent Health: Failed to save recovery progress - HTTP', response.status)
+        throw new Error(`Erreur HTTP ${response.status}`)
       }
     } catch (error) {
-      console.error('Error saving recovery progress:', error)
+      console.error('Parent Health: Error saving recovery progress:', error)
+      setErrors(prev => ({ ...prev, recovery: error instanceof Error ? error.message : 'Erreur de sauvegarde' }))
+    } finally {
+      setSaving(prev => ({ ...prev, recovery: false }))
     }
   }, [userProfile?.email])
 
-  // ✅ Save self-care goals to database
+  // ✅ Enhanced self-care goals saving with loading states
   const saveSelfCareGoals = useCallback(async (newGoals: any) => {
     if (!userProfile?.email) return
     
+    setSaving(prev => ({ ...prev, goals: true }))
+    
     try {
+      console.log('Parent Health: Saving self-care goals...')
       const response = await fetch('/api/parent-health/goals', {
         method: 'POST',
         headers: {
@@ -487,14 +612,18 @@ export default function ParentHealthPage() {
       })
       
       if (response.ok) {
-        console.log('Self-care goals saved')
+        console.log('Parent Health: Self-care goals saved successfully')
         // Update local state to reflect saved data
         setSelfCareGoals(newGoals)
       } else {
-        console.error('Failed to save self-care goals')
+        console.error('Parent Health: Failed to save self-care goals - HTTP', response.status)
+        throw new Error(`Erreur HTTP ${response.status}`)
       }
     } catch (error) {
-      console.error('Error saving self-care goals:', error)
+      console.error('Parent Health: Error saving self-care goals:', error)
+      setErrors(prev => ({ ...prev, goals: error instanceof Error ? error.message : 'Erreur de sauvegarde' }))
+    } finally {
+      setSaving(prev => ({ ...prev, goals: false }))
     }
   }, [userProfile?.email])
 
@@ -513,12 +642,44 @@ export default function ParentHealthPage() {
     }
   }, [recoveryProgress])
 
+  // ✅ Retry functions for each data type
+  const retryMoodHistory = useCallback(() => {
+    console.log('Parent Health: Retrying mood history load...')
+    loadMoodHistory()
+  }, [loadMoodHistory])
+
+  const retryRecoveryProgress = useCallback(() => {
+    console.log('Parent Health: Retrying recovery progress load...')
+    loadRecoveryProgress()
+  }, [loadRecoveryProgress])
+
+  const retrySelfCareGoals = useCallback(() => {
+    console.log('Parent Health: Retrying self-care goals load...')
+    loadSelfCareGoals()
+  }, [loadSelfCareGoals])
+
+  // ✅ Render loading state component to match other pages
+  const renderLoadingState = (message: string) => (
+    <div className="flex items-center justify-center py-12">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+          Chargement des données de santé parentale...
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{message}</p>
+      </div>
+    </div>
+  )
+
   // ✅ Render mood tracking interface
   const renderMoodTracker = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-          Suivi de l'humeur
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-3">
+          <span>Suivi de l'humeur</span>
+          {loading.mood && (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
+          )}
         </h2>
         <input
           type="date"
@@ -527,6 +688,31 @@ export default function ParentHealthPage() {
           className="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
         />
       </div>
+
+      {/* Error display with retry */}
+      {errors.mood && (
+        <div className="glass-card rounded-xl p-4 border border-red-200 bg-red-50 dark:bg-red-900/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              <div>
+                <h3 className="font-semibold text-red-800 dark:text-red-200">
+                  Erreur de chargement des données d'humeur
+                </h3>
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.mood}</p>
+              </div>
+            </div>
+            <button
+              onClick={retryMoodHistory}
+              disabled={loading.mood}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center space-x-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading.mood ? 'animate-spin' : ''}`} />
+              <span>Réessayer</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {Object.entries(MOOD_SCALES).map(([key, scale]) => {
@@ -578,14 +764,21 @@ export default function ParentHealthPage() {
         <div className="flex items-center space-x-4 mt-4">
           <button
             onClick={saveMoodEntry}
-            className={`px-6 py-3 rounded-xl font-semibold transition-colors flex items-center space-x-2 ${
+            disabled={saving.mood}
+            className={`px-6 py-3 rounded-xl font-semibold transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed ${
               isEditingExisting 
                 ? 'bg-amber-500 hover:bg-amber-600 text-white' 
                 : 'bg-purple-500 hover:bg-purple-600 text-white'
             }`}
           >
-            <Save className="w-5 h-5" />
-            <span>{isEditingExisting ? 'Modifier l\'entrée' : 'Enregistrer l\'entrée'}</span>
+            {saving.mood ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            ) : (
+              <Save className="w-5 h-5" />
+            )}
+            <span>
+              {saving.mood ? 'Sauvegarde...' : (isEditingExisting ? 'Modifier l\'entrée' : 'Enregistrer l\'entrée')}
+            </span>
           </button>
           
           {isEditingExisting && (
@@ -714,14 +907,42 @@ export default function ParentHealthPage() {
   const renderSelfCareGoals = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-          Objectifs de Bien-être
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-3">
+          <span>Objectifs de Bien-être</span>
+          {loading.goals && (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
+          )}
         </h2>
         <button className="bg-purple-500 text-white px-4 py-2 rounded-xl font-medium hover:bg-purple-600 transition-colors flex items-center space-x-2">
           <Plus className="w-4 h-4" />
           <span>Nouvel objectif</span>
         </button>
       </div>
+
+      {/* Error display with retry */}
+      {errors.goals && (
+        <div className="glass-card rounded-xl p-4 border border-red-200 bg-red-50 dark:bg-red-900/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              <div>
+                <h3 className="font-semibold text-red-800 dark:text-red-200">
+                  Erreur de chargement des objectifs
+                </h3>
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.goals}</p>
+              </div>
+            </div>
+            <button
+              onClick={retrySelfCareGoals}
+              disabled={loading.goals}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center space-x-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading.goals ? 'animate-spin' : ''}`} />
+              <span>Réessayer</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(SELF_CARE_DOMAINS).map(([domainKey, domain]) => {
@@ -1031,14 +1252,42 @@ export default function ParentHealthPage() {
   const renderRecoveryChecklist = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-          Récupération Postpartum
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-3">
+          <span>Récupération Postpartum</span>
+          {loading.recovery && (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500"></div>
+          )}
         </h2>
         <div className="text-right">
           <div className="text-3xl font-bold text-green-500">{calculateRecoveryScore.overall}%</div>
           <div className="text-sm text-gray-600">Progression globale</div>
         </div>
       </div>
+
+      {/* Error display with retry */}
+      {errors.recovery && (
+        <div className="glass-card rounded-xl p-4 border border-red-200 bg-red-50 dark:bg-red-900/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              <div>
+                <h3 className="font-semibold text-red-800 dark:text-red-200">
+                  Erreur de chargement des données de récupération
+                </h3>
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.recovery}</p>
+              </div>
+            </div>
+            <button
+              onClick={retryRecoveryProgress}
+              disabled={loading.recovery}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center space-x-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading.recovery ? 'animate-spin' : ''}`} />
+              <span>Réessayer</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {Object.entries(RECOVERY_CATEGORIES).map(([categoryKey, category]) => {
@@ -1106,6 +1355,18 @@ export default function ParentHealthPage() {
       </div>
     </div>
   )
+
+  // Show loading screen during initial load
+  if (loading.initialLoad) {
+    return (
+      <AppLayout currentPage="Santé Parentale" showHeader={true}>
+        <div className="p-6">
+          <h1 className="text-4xl font-bold mb-8 gradient-text text-center">Santé Parentale</h1>
+          {renderLoadingState('Récupération de votre humeur, récupération et objectifs')}
+        </div>
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout 

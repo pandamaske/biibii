@@ -16,7 +16,10 @@ export default function HealthPage() {
     initializeProfile
   } = useBabyTrackerStore()
   
-  const babyId = currentBaby?.id
+  const babyId = currentBaby?.id || "user-1753219621644_baby_1"
+  
+  console.log('HealthPage: currentBaby:', currentBaby)
+  console.log('HealthPage: babyId:', babyId)
 
   return (
     <AppLayout currentPage="Santé" showHeader={true}>

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useBabyTrackerStore } from '@/lib/store'
 import { useLiveBabyData } from '@/hooks/useLiveBabyData'
 import { formatTime, formatDuration, getAgeInWeeks, getRecommendedDailyMilk } from '@/lib/utils'
-import { Milk, Square, Clock, Edit3, Trash2, Baby, X, Save, Calendar } from 'lucide-react'
+import { Milk, Square, Clock, Edit3, Trash2, Baby, X, Save, Calendar, AlertCircle, RefreshCw } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import ClientOnly from '@/components/ClientOnly'
 
@@ -300,6 +300,12 @@ export default function FeedingPage() {
 
   // ✅ Live data hook for real-time SQL data (faster refresh for feeding page)
   const liveData = useLiveBabyData(5000) // Refresh every 5 seconds for better responsiveness
+  
+  console.log('Feeding Page: Live data state:', { 
+    loading: liveData.loading, 
+    error: liveData.error, 
+    hasData: !!liveData.liveData.feedings.length 
+  })
 
   // ✅ TOUS les useEffect d'abord
   useEffect(() => {
@@ -406,6 +412,41 @@ export default function FeedingPage() {
     }
   })()
 
+  // Enhanced error and loading UI components
+  const renderLoadingState = () => (
+    <div className="flex items-center justify-center py-12">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+          Chargement des données de repas...
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Récupération des derniers repas et statistiques
+        </p>
+      </div>
+    </div>
+  )
+
+  const renderErrorState = () => (
+    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 mb-6">
+      <div className="flex items-center space-x-3 mb-4">
+        <AlertCircle className="w-6 h-6 text-red-500" />
+        <h3 className="font-semibold text-red-800 dark:text-red-200">Erreur de chargement</h3>
+      </div>
+      <p className="text-red-700 dark:text-red-300 text-sm mb-4">{liveData.error}</p>
+      <button
+        onClick={() => {
+          console.log('Feeding Page: Manually refreshing data...')
+          window.dispatchEvent(new Event('refresh-live-data'))
+        }}
+        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+      >
+        <RefreshCw className="w-4 h-4" />
+        <span>Réessayer</span>
+      </button>
+    </div>
+  )
+
   if (!currentBaby) {
     return (
       <AppLayout 
@@ -425,6 +466,20 @@ export default function FeedingPage() {
   if (!calculations) return null
 
   const { todayFeedings, totalMilk, recommendedMilk, lastFeeding } = calculations
+  
+  // Show loading screen during initial load
+  if (liveData.loading && todayFeedings.length === 0) {
+    return (
+      <AppLayout 
+        currentPage="Repas"
+        showHeader={true}
+      >
+        <div className="p-6">
+          {renderLoadingState()}
+        </div>
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout 
@@ -433,6 +488,8 @@ export default function FeedingPage() {
       showHeader={true}
     >
       <div className="p-6 space-y-8">
+        {/* Error state display */}
+        {liveData.error && renderErrorState()}
         {/* Active Feeding Session */}
         {feedingSession.isActive && (
           <div className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30 border-2 border-blue-200 dark:border-blue-700 rounded-3xl p-6 shadow-large animate-slide-up">
@@ -687,6 +744,9 @@ export default function FeedingPage() {
             <h3 className="text-lg font-semibold dark:text-gray-200 flex items-center space-x-2">
               <Clock className="w-5 h-5  dark:text-gray-400" />
               <span>Aujourd'hui ({todayFeedings.length})</span>
+              {liveData.loading && (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+              )}
             </h3>
             
             {todayFeedings.length > 0 && (
@@ -696,7 +756,12 @@ export default function FeedingPage() {
             )}
           </div>
 
-          {todayFeedings.length === 0 ? (
+          {liveData.loading && todayFeedings.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
+              <span className="text-gray-600 dark:text-gray-400">Chargement des repas...</span>
+            </div>
+          ) : todayFeedings.length === 0 ? (
             <div className="text-center py-8  dark:text-gray-400">
               <Milk className="w-12 h-12 mx-auto mb-4 opacity-30 animate-float" />
               <p className="font-medium">Aucun repas enregistré aujourd'hui</p>

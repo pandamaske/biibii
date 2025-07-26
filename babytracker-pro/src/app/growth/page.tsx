@@ -8,7 +8,7 @@ import {
   Scale, TrendingUp, Plus, Baby, Trash2, Edit3, Save, X, Calendar,
   Activity, Target, AlertTriangle, Camera, Download, Eye,
   Brain, Heart, Ruler, BarChart3, LineChart, PieChart,
-  Circle, Smile, Thermometer, Droplets, Moon
+  Circle, Smile, Thermometer, Droplets, Moon, AlertCircle, RefreshCw
 } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
 import ClientOnly from '@/components/ClientOnly'
@@ -592,6 +592,21 @@ const EditGrowthModal = ({ entry, isOpen, onClose, onSave }: any) => {
 }
 
 export default function AdvancedGrowthPage() {
+  // ✅ Enhanced loading states for optimized UX
+  const [loading, setLoading] = useState({
+    growthEntries: true,
+    milestones: true,
+    initialLoad: true
+  })
+  const [errors, setErrors] = useState({
+    growthEntries: null as string | null,
+    milestones: null as string | null
+  })
+  const [saving, setSaving] = useState({
+    growthEntry: false,
+    milestone: false
+  })
+
   // ✅ TOUS les états d'abord
   const [showAddForm, setShowAddForm] = useState(false)
   const [newMeasurement, setNewMeasurement] = useState({
@@ -634,41 +649,71 @@ export default function AdvancedGrowthPage() {
   }, [initializeData, initializeProfile])
 
   // ✅ Load milestones from database
+  // ✅ Enhanced milestones loading with error handling
   const loadMilestones = useCallback(async () => {
     if (!currentBaby?.id) return
     
+    setLoading(prev => ({ ...prev, milestones: true }))
+    setErrors(prev => ({ ...prev, milestones: null }))
+    
     try {
+      console.log('Growth Page: Loading milestones for baby:', currentBaby.id)
       const response = await fetch(`/api/health/milestones?babyId=${currentBaby.id}`)
       if (response.ok) {
         const data = await response.json()
         setMilestones(Array.isArray(data) ? data : [])
+        console.log('Growth Page: Milestones loaded successfully:', data.length)
+      } else {
+        throw new Error(`HTTP ${response.status}: Failed to load milestones`)
       }
     } catch (error) {
-      console.error('Error loading milestones:', error)
+      console.error('Growth Page: Error loading milestones:', error)
+      setErrors(prev => ({ ...prev, milestones: error instanceof Error ? error.message : 'Erreur de chargement' }))
+    } finally {
+      setLoading(prev => ({ ...prev, milestones: false }))
     }
   }, [currentBaby?.id])
 
   useEffect(() => {
     if (currentBaby) {
-      const entries = getGrowthEntries(currentBaby.id)
-      setGrowthEntries(entries)
+      // Enhanced growth entries loading with loading states
+      setLoading(prev => ({ ...prev, growthEntries: true }))
+      setErrors(prev => ({ ...prev, growthEntries: null }))
       
-      // Load milestones from database
-      loadMilestones()
-      
-      // Add birth entry if no entries exist
-      if (entries.length === 0) {
-        const birthEntry = {
-          id: Date.now().toString(),
-          babyId: currentBaby.id,
-          date: currentBaby.birthDate,
-          weight: currentBaby.weight,
-          height: currentBaby.height,
-          notes: 'Mesures de naissance'
+      try {
+        console.log('Growth Page: Loading growth entries for baby:', currentBaby.id)
+        const entries = getGrowthEntries(currentBaby.id)
+        setGrowthEntries(entries)
+        console.log('Growth Page: Growth entries loaded successfully:', entries.length)
+        
+        // Load milestones from database
+        loadMilestones()
+        
+        // Add birth entry if no entries exist
+        if (entries.length === 0) {
+          const birthEntry = {
+            id: Date.now().toString(),
+            babyId: currentBaby.id,
+            date: currentBaby.birthDate,
+            weight: currentBaby.weight,
+            height: currentBaby.height,
+            notes: 'Mesures de naissance'
+          }
+          addGrowthEntry(birthEntry)
+          setGrowthEntries([birthEntry])
         }
-        addGrowthEntry(birthEntry)
-        setGrowthEntries([birthEntry])
+        
+        setLoading(prev => ({ ...prev, growthEntries: false }))
+      } catch (error) {
+        console.error('Growth Page: Error loading growth entries:', error)
+        setErrors(prev => ({ ...prev, growthEntries: error instanceof Error ? error.message : 'Erreur de chargement' }))
+        setLoading(prev => ({ ...prev, growthEntries: false }))
       }
+      
+      // Mark initial load as complete after both data sources are processed
+      setTimeout(() => {
+        setLoading(prev => ({ ...prev, initialLoad: false }))
+      }, 1000)
     }
   }, [currentBaby, getGrowthEntries, addGrowthEntry, loadMilestones])
 
@@ -914,6 +959,36 @@ export default function AdvancedGrowthPage() {
     }
   }, [currentBaby, calculateGrowthVelocity])
 
+  // Enhanced error and loading UI components
+  const renderLoadingState = (message: string) => (
+    <div className="flex items-center justify-center py-12">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+          Chargement des données de croissance...
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{message}</p>
+      </div>
+    </div>
+  )
+
+  const renderErrorState = (error: string, onRetry: () => void) => (
+    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 mb-6">
+      <div className="flex items-center space-x-3 mb-4">
+        <AlertCircle className="w-6 h-6 text-red-500" />
+        <h3 className="font-semibold text-red-800 dark:text-red-200">Erreur de chargement</h3>
+      </div>
+      <p className="text-red-700 dark:text-red-300 text-sm mb-4">{error}</p>
+      <button
+        onClick={onRetry}
+        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+      >
+        <RefreshCw className="w-4 h-4" />
+        <span>Réessayer</span>
+      </button>
+    </div>
+  )
+
   if (!currentBaby || !calculations) {
     return (
       <AppLayout currentPage="Croissance" showHeader={true}>
@@ -922,6 +997,17 @@ export default function AdvancedGrowthPage() {
             <Baby className="w-16 h-16 mx-auto  mb-4 animate-float" />
             <p className="text-gray-600">Créez d'abord le profil de votre bébé</p>
           </div>
+        </div>
+      </AppLayout>
+    )
+  }
+
+  // Show loading screen during initial load
+  if (loading.initialLoad) {
+    return (
+      <AppLayout currentPage="Croissance" showHeader={true}>
+        <div className="p-6">
+          {renderLoadingState('Récupération des mesures de croissance et jalons')}
         </div>
       </AppLayout>
     )
@@ -936,6 +1022,14 @@ export default function AdvancedGrowthPage() {
       showHeader={true}
     >
       <div className="p-6 space-y-8">
+        {/* Error state display */}
+        {errors.growthEntries && renderErrorState(errors.growthEntries, () => {
+          console.log('Growth Page: Manually refreshing growth entries...')
+          const entries = getGrowthEntries(currentBaby.id)
+          setGrowthEntries(entries)
+          setErrors(prev => ({ ...prev, growthEntries: null }))
+        })}
+        {errors.milestones && renderErrorState(errors.milestones, loadMilestones)}
         {/* ✅ Header avec métriques principales */}
         <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-3xl p-6 text-white shadow-large card-hover">
           <div className="text-center space-y-4">
@@ -1083,8 +1177,11 @@ export default function AdvancedGrowthPage() {
         {/* ✅ Étapes de développement détaillées */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Étapes de développement
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+              <span>Étapes de développement</span>
+              {loading.milestones && (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+              )}
             </h3>
             <button 
               onClick={() => {
@@ -1098,7 +1195,12 @@ export default function AdvancedGrowthPage() {
             </button>
           </div>
           
-          {milestones.length > 0 ? (
+          {loading.milestones && milestones.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
+              <span className="text-gray-600 dark:text-gray-400">Chargement des étapes de développement...</span>
+            </div>
+          ) : milestones.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {['motor', 'cognitive', 'language', 'social', 'adaptive'].map(category => {
                 const categoryMilestones = milestones.filter((m: any) => m.category === category)
