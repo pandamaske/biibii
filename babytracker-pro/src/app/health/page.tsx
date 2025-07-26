@@ -6,7 +6,7 @@ import HealthDashboard from '@/components/modules/HealthDashboard'
 export default function HealthPage() {
   // For now, using a hardcoded baby ID - in a real app this would come from user context/auth
   // Using the ID from the sample baby we created
-  const babyId = "user-1753219621644_baby_1"
+  const babyId = userId + '_baby_1'
 
   return (
     <AppLayout currentPage="Santé" showHeader={true}>
