@@ -301,19 +301,7 @@ export default function ParentHealthPage() {
   
   const { userProfile, currentBaby, initializeProfile } = useBabyTrackerStore()
 
-  // ✅ Initialize profile if missing (after F5 refresh)
-  useEffect(() => {
-    if (!userProfile) {
-      const storedEmail = localStorage.getItem('user-email')
-      if (storedEmail) {
-        console.log('Parent Health: No profile found but email in localStorage, initializing...')
-        initializeProfile(storedEmail)
-      } else {
-        console.log('Parent Health: No profile and no stored email, user needs to log in')
-        setLoading(prev => ({ ...prev, initialLoad: false }))
-      }
-    }
-  }, [userProfile, initializeProfile])
+
 
   // ✅ Enhanced data loading with retry logic and error handling  
   const loadDataWithRetry = useCallback(async (url: string, retries = 2): Promise<any> => {
