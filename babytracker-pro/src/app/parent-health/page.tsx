@@ -299,7 +299,21 @@ export default function ParentHealthPage() {
   const [showBreathingExercise, setShowBreathingExercise] = useState(false)
   const [breathingType, setBreathingType] = useState<'stress' | 'sleep' | 'energy' | 'anxiety'>('stress')
   
-  const { userProfile, currentBaby } = useBabyTrackerStore()
+  const { userProfile, currentBaby, initializeProfile } = useBabyTrackerStore()
+
+  // ✅ Initialize profile if missing (after F5 refresh)
+  useEffect(() => {
+    if (!userProfile) {
+      const storedEmail = localStorage.getItem('user-email')
+      if (storedEmail) {
+        console.log('Parent Health: No profile found but email in localStorage, initializing...')
+        initializeProfile(storedEmail)
+      } else {
+        console.log('Parent Health: No profile and no stored email, user needs to log in')
+        setLoading(prev => ({ ...prev, initialLoad: false }))
+      }
+    }
+  }, [userProfile, initializeProfile])
 
   // ✅ Enhanced data loading with retry logic and error handling  
   const loadDataWithRetry = useCallback(async (url: string, retries = 2): Promise<any> => {
@@ -596,10 +610,22 @@ export default function ParentHealthPage() {
         // ✅ Trigger analysis and recommendations based on database data
         analyzeWellbeingTrends(moodHistory)
         
-        // ✅ Refresh mood history after saving
-        await loadMoodHistory()
+        // ✅ Force complete data refresh after saving
+        console.log('Parent Health: Forcing complete data refresh after save...')
         
-        console.log('Parent Health: Mood entry saved and data refreshed for date:', selectedMoodDate)
+        // Reset loading states to show user something is happening
+        setLoading(prev => ({ ...prev, mood: true }))
+        
+        // Force reload all data
+        await Promise.all([
+          loadMoodHistory(),
+          loadRecoveryProgress(),
+          loadSelfCareGoals()
+        ])
+        
+        setLoading(prev => ({ ...prev, mood: false }))
+        
+        console.log('Parent Health: Complete data refresh completed for date:', selectedMoodDate)
         
       } else {
         console.error('Parent Health: Failed to save mood entry - HTTP', response.status)
