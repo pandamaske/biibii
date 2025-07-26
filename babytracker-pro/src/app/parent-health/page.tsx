@@ -334,31 +334,42 @@ export default function ParentHealthPage() {
     if (userProfile?.email) {
       const loadAllData = async () => {
         console.log('Parent Health: Starting comprehensive data load for user:', userProfile.email)
-        console.log('Parent Health: Initial loading states:', { mood: loading.mood, recovery: loading.recovery, goals: loading.goals })
         
-        // Critical data first
-        console.log('Parent Health: Loading critical data (mood, recovery)...')
-        await Promise.all([
-          loadMoodHistory(),
-          loadRecoveryProgress()
-        ])
-        
-        // Non-critical data with slight delay
-        console.log('Parent Health: Loading non-critical data (goals) with delay...')
-        setTimeout(() => {
-          loadSelfCareGoals()
-        }, 300)
-        
-        // Mark initial load as complete
-        setTimeout(() => {
-          console.log('Parent Health: Initial load completed')
+        // Add timeout fallback
+        const timeoutId = setTimeout(() => {
+          console.warn('Parent Health: Data loading timeout, marking initial load as complete')
           setLoading(prev => ({ ...prev, initialLoad: false }))
-        }, 1000)
+        }, 10000) // 10 second timeout
+        
+        try {
+          // Critical data first
+          console.log('Parent Health: Loading critical data (mood, recovery)...')
+          await Promise.all([
+            loadMoodHistory(),
+            loadRecoveryProgress()
+          ])
+          
+          // Non-critical data
+          console.log('Parent Health: Loading non-critical data (goals)...')
+          await loadSelfCareGoals()
+          
+          // Mark initial load as complete only after all data is loaded
+          console.log('Parent Health: All data loaded, marking initial load as complete')
+          clearTimeout(timeoutId)
+          setLoading(prev => ({ ...prev, initialLoad: false }))
+        } catch (error) {
+          console.error('Parent Health: Error during initial data load:', error)
+          // Still mark as complete to avoid infinite loading
+          clearTimeout(timeoutId)
+          setLoading(prev => ({ ...prev, initialLoad: false }))
+        }
       }
       
       loadAllData()
     } else {
       console.log('Parent Health: No user profile or email available, skipping data load')
+      // If no user profile, don't show loading
+      setLoading(prev => ({ ...prev, initialLoad: false }))
     }
   }, [userProfile?.email])
 
@@ -390,7 +401,26 @@ export default function ParentHealthPage() {
           })
         }
         
+        // Process recovery data to get energy levels
+        if (data.data?.recoveryData) {
+          data.data.recoveryData.forEach((recovery: any) => {
+            const date = new Date(recovery.date).toISOString().split('T')[0]
+            if (moodData[date]) {
+              moodData[date].energyLevel = recovery.energyLevel
+            } else {
+              moodData[date] = {
+                date: recovery.date,
+                energyLevel: recovery.energyLevel,
+                anxietyLevel: 3,
+                riskLevel: 'low',
+                moodEntries: []
+              }
+            }
+          })
+        }
+        
         setMoodHistory(moodData)
+        console.log('Parent Health: Mood history loaded successfully, entries:', Object.keys(moodData).length)
         
         // Load today's entry if it exists
         const today = new Date().toISOString().split('T')[0]
@@ -411,8 +441,10 @@ export default function ParentHealthPage() {
           })
           setIsEditingExisting(true)
         }
-        
-        console.log('Parent Health: Mood history loaded successfully')
+      } else {
+        // No data returned - set empty mood history
+        console.log('Parent Health: No mood data returned, setting empty history')
+        setMoodHistory({})
       }
     } catch (error) {
       console.error('Parent Health: Error loading mood history:', error)
@@ -508,7 +540,7 @@ export default function ParentHealthPage() {
     setSaving(prev => ({ ...prev, mood: true }))
     
     try {
-      console.log('Parent Health: Saving mood entry...')
+      console.log('Parent Health: Saving mood entry for date:', selectedMoodDate)
       const response = await fetch('/api/parent-health/mood', {
         method: 'POST',
         headers: {
@@ -516,6 +548,7 @@ export default function ParentHealthPage() {
         },
         body: JSON.stringify({
           userEmail: userProfile.email,
+          date: selectedMoodDate, // Save for the selected date
           energy: currentMoodEntry.energy,
           mood: currentMoodEntry.mood,
           stress: currentMoodEntry.stress,
@@ -671,23 +704,131 @@ export default function ParentHealthPage() {
     </div>
   )
 
-  // ✅ Render mood tracking interface
-  const renderMoodTracker = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-3">
-          <span>Suivi de l'humeur</span>
-          {loading.mood && (
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
-          )}
-        </h2>
-        <input
-          type="date"
-          value={selectedMoodDate}
-          onChange={(e) => setSelectedMoodDate(e.target.value)}
-          className="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
-        />
-      </div>
+  // ✅ Render mood tracking interface with improved UX
+  const renderMoodTracker = () => {
+    const today = new Date().toISOString().split('T')[0]
+    const todayEntry = moodHistory[selectedMoodDate]
+    const hasEntryForSelectedDate = todayEntry && todayEntry.moodEntries && todayEntry.moodEntries.length > 0
+    
+    // Get past 7 days for history
+    const past7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+      return date.toISOString().split('T')[0]
+    })
+    
+    const filteredHistory = Object.entries(moodHistory)
+      .filter(([date]) => past7Days.includes(date))
+      .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
+    
+    // Debug logging
+    console.log('Parent Health Mood Tracker Debug:', {
+      moodHistoryKeys: Object.keys(moodHistory),
+      past7Days,
+      filteredHistoryLength: filteredHistory.length,
+      selectedMoodDate,
+      hasEntryForSelectedDate
+    })
+
+    return (
+      <div className="space-y-6">
+        {/* Header with improved actions */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-3">
+            <span>Suivi de l'humeur</span>
+            {loading.mood && (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
+            )}
+          </h2>
+          <div className="flex items-center space-x-3">
+            <input
+              type="date"
+              value={selectedMoodDate}
+              onChange={(e) => {
+                setSelectedMoodDate(e.target.value)
+                // Load entry for this date if it exists
+                const entry = moodHistory[e.target.value]
+                if (entry && entry.moodEntries && entry.moodEntries.length > 0) {
+                  const moodEntry = entry.moodEntries[0]
+                  setCurrentMoodEntry({
+                    energy: entry.energyLevel || 3,
+                    mood: moodEntry.mood === 'excellent' ? 5 : 
+                          moodEntry.mood === 'good' ? 4 : 
+                          moodEntry.mood === 'okay' ? 3 : 
+                          moodEntry.mood === 'low' ? 2 : 1,
+                    stress: moodEntry.anxietyLevel || 3,
+                    confidence: 3,
+                    notes: moodEntry.notes || '',
+                    sleep_hours: 7,
+                    stress_factors: moodEntry.stressFactors || [],
+                    positive_moments: moodEntry.copingStrategies || []
+                  })
+                  setIsEditingExisting(true)
+                } else {
+                  // Reset to default for new entry
+                  setCurrentMoodEntry({
+                    energy: 3,
+                    mood: 3,
+                    stress: 3,
+                    confidence: 3,
+                    notes: '',
+                    sleep_hours: 7,
+                    stress_factors: [],
+                    positive_moments: []
+                  })
+                  setIsEditingExisting(false)
+                }
+              }}
+              className="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+            />
+            {!hasEntryForSelectedDate && (
+              <button
+                onClick={() => {
+                  setCurrentMoodEntry({
+                    energy: 3,
+                    mood: 3,
+                    stress: 3,
+                    confidence: 3,
+                    notes: '',
+                    sleep_hours: 7,
+                    stress_factors: [],
+                    positive_moments: []
+                  })
+                  setIsEditingExisting(false)
+                }}
+                className="px-4 py-2 bg-purple-500 text-white rounded-xl font-medium hover:bg-purple-600 transition-colors flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Ajouter une entrée</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Current date info */}
+        <div className="glass-card rounded-xl p-4 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-800 dark:text-gray-200">
+                {selectedMoodDate === today ? 'Aujourd\'hui' : new Date(selectedMoodDate).toLocaleDateString('fr-FR', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {hasEntryForSelectedDate ? 'Check-in déjà effectué - Vous pouvez le modifier' : 'Aucun check-in pour cette date'}
+              </p>
+            </div>
+            {hasEntryForSelectedDate && (
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <span className="text-sm font-medium text-green-600">Complété</span>
+              </div>
+            )}
+          </div>
+        </div>
 
       {/* Error display with retry */}
       {errors.mood && (
@@ -805,18 +946,16 @@ export default function ParentHealthPage() {
         </div>
       </div>
 
-      {/* Mood History Section */}
+      {/* Mood History Section - Past 7 Days */}
       <div className="glass-card rounded-2xl p-6">
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center space-x-2">
           <BarChart3 className="w-6 h-6 text-purple-500" />
-          <span>Historique des entrées</span>
+          <span>Historique des 7 derniers jours</span>
         </h3>
         
         <div className="space-y-4 max-h-96 overflow-y-auto">
-          {Object.entries(moodHistory)
-            .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
-            .slice(0, 10)
-            .map(([date, data]: [string, any]) => (
+          {filteredHistory.length > 0 ? (
+            filteredHistory.map(([date, data]: [string, any]) => (
               <div 
                 key={date}
                 className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-700"
@@ -889,19 +1028,19 @@ export default function ParentHealthPage() {
                   </div>
                 )}
               </div>
-            ))}
-          
-          {Object.keys(moodHistory).length === 0 && (
+            ))
+          ) : (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <Brain className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Aucune entrée d'humeur enregistrée</p>
-              <p className="text-sm">Commencez par enregistrer votre première entrée ci-dessus</p>
+              <p>Aucune entrée d'humeur des 7 derniers jours</p>
+              <p className="text-sm">Commencez par enregistrer une entrée pour aujourd'hui</p>
             </div>
           )}
         </div>
       </div>
     </div>
   )
+}
 
   // ✅ Render self-care goals interface
   const renderSelfCareGoals = () => (

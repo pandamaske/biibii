@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { userEmail, energy, mood, stress, confidence, notes, sleepHours, stressFactors, positiveMoments } = body
+    const { userEmail, date, energy, mood, stress, confidence, notes, sleepHours, stressFactors, positiveMoments } = body
 
     if (!userEmail) {
       return NextResponse.json({ error: 'User email is required' }, { status: 400 })
@@ -35,18 +35,18 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Get or create today's mental health tracking entry
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    // Get or create mental health tracking entry for the specified date
+    const targetDate = date ? new Date(date) : new Date()
+    targetDate.setHours(0, 0, 0, 0)
+    const nextDay = new Date(targetDate)
+    nextDay.setDate(nextDay.getDate() + 1)
 
     let mentalHealthTracking = await prisma.mentalHealthTracking.findFirst({
       where: {
         parentProfileId: parentProfile.id,
         date: {
-          gte: today,
-          lt: tomorrow
+          gte: targetDate,
+          lt: nextDay
         }
       }
     })
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       mentalHealthTracking = await prisma.mentalHealthTracking.create({
         data: {
           parentProfileId: parentProfile.id,
-          date: today,
+          date: targetDate,
           anxietyLevel: stress || 3,
           riskLevel: (mood <= 2 && energy <= 2) ? 'high' : 
                     (mood <= 3 || energy <= 3) ? 'moderate' : 'low'
@@ -78,15 +78,15 @@ export async function POST(req: NextRequest) {
       where: {
         mentalHealthTrackingId: mentalHealthTracking.id,
         date: {
-          gte: today,
-          lt: tomorrow
+          gte: targetDate,
+          lt: nextDay
         }
       }
     })
 
     const moodData = {
       mentalHealthTrackingId: mentalHealthTracking.id,
-      date: new Date(),
+      date: targetDate,
       mood: mood === 5 ? 'excellent' : 
             mood === 4 ? 'good' : 
             mood === 3 ? 'okay' : 
@@ -113,15 +113,15 @@ export async function POST(req: NextRequest) {
       where: {
         parentProfileId: parentProfile.id,
         date: {
-          gte: today,
-          lt: tomorrow
+          gte: targetDate,
+          lt: nextDay
         }
       }
     })
 
     const physicalData = {
       parentProfileId: parentProfile.id,
-      date: new Date(),
+      date: targetDate,
       energyLevel: energy || 3,
       sleepQuality: sleepHours >= 7 ? 'good' : 
                    sleepHours >= 5 ? 'poor' : 'terrible',
