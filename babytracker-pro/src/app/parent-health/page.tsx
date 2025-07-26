@@ -373,6 +373,35 @@ export default function ParentHealthPage() {
     }
   }, [userProfile?.email])
 
+  // ✅ Update editing state when mood history or selected date changes
+  useEffect(() => {
+    const selectedDateEntry = moodHistory[selectedMoodDate]
+    const hasEntry = selectedDateEntry && selectedDateEntry.moodEntries && selectedDateEntry.moodEntries.length > 0
+    
+    if (hasEntry) {
+      // Load the existing entry into the form
+      const moodEntry = selectedDateEntry.moodEntries[0]
+      setCurrentMoodEntry({
+        energy: selectedDateEntry.energyLevel || 3,
+        mood: moodEntry.mood === 'excellent' ? 5 : 
+              moodEntry.mood === 'good' ? 4 : 
+              moodEntry.mood === 'okay' ? 3 : 
+              moodEntry.mood === 'low' ? 2 : 1,
+        stress: moodEntry.anxietyLevel || 3,
+        confidence: 3,
+        notes: moodEntry.notes || '',
+        sleep_hours: 7,
+        stress_factors: moodEntry.stressFactors || [],
+        positive_moments: moodEntry.copingStrategies || []
+      })
+      setIsEditingExisting(true)
+      console.log('Parent Health: Loaded existing entry for date:', selectedMoodDate)
+    } else {
+      setIsEditingExisting(false)
+      console.log('Parent Health: No entry found for date:', selectedMoodDate)
+    }
+  }, [moodHistory, selectedMoodDate])
+
   // ✅ Enhanced mood history loading with error handling
   const loadMoodHistory = useCallback(async () => {
     if (!userProfile?.email) return
@@ -570,8 +599,7 @@ export default function ParentHealthPage() {
         // ✅ Refresh mood history after saving
         await loadMoodHistory()
         
-        // Reset editing state
-        setIsEditingExisting(false)
+        console.log('Parent Health: Mood entry saved and data refreshed for date:', selectedMoodDate)
         
       } else {
         console.error('Parent Health: Failed to save mood entry - HTTP', response.status)
@@ -707,8 +735,8 @@ export default function ParentHealthPage() {
   // ✅ Render mood tracking interface with improved UX
   const renderMoodTracker = () => {
     const today = new Date().toISOString().split('T')[0]
-    const todayEntry = moodHistory[selectedMoodDate]
-    const hasEntryForSelectedDate = todayEntry && todayEntry.moodEntries && todayEntry.moodEntries.length > 0
+    const selectedDateEntry = moodHistory[selectedMoodDate]
+    const hasEntryForSelectedDate = selectedDateEntry && selectedDateEntry.moodEntries && selectedDateEntry.moodEntries.length > 0
     
     // Get past 7 days for history
     const past7Days = Array.from({ length: 7 }, (_, i) => {
@@ -727,7 +755,10 @@ export default function ParentHealthPage() {
       past7Days,
       filteredHistoryLength: filteredHistory.length,
       selectedMoodDate,
-      hasEntryForSelectedDate
+      hasEntryForSelectedDate,
+      selectedDateEntry: selectedDateEntry,
+      selectedDateEntryMoodEntries: selectedDateEntry?.moodEntries?.length || 0,
+      isEditingExisting
     })
 
     return (
@@ -746,38 +777,7 @@ export default function ParentHealthPage() {
               value={selectedMoodDate}
               onChange={(e) => {
                 setSelectedMoodDate(e.target.value)
-                // Load entry for this date if it exists
-                const entry = moodHistory[e.target.value]
-                if (entry && entry.moodEntries && entry.moodEntries.length > 0) {
-                  const moodEntry = entry.moodEntries[0]
-                  setCurrentMoodEntry({
-                    energy: entry.energyLevel || 3,
-                    mood: moodEntry.mood === 'excellent' ? 5 : 
-                          moodEntry.mood === 'good' ? 4 : 
-                          moodEntry.mood === 'okay' ? 3 : 
-                          moodEntry.mood === 'low' ? 2 : 1,
-                    stress: moodEntry.anxietyLevel || 3,
-                    confidence: 3,
-                    notes: moodEntry.notes || '',
-                    sleep_hours: 7,
-                    stress_factors: moodEntry.stressFactors || [],
-                    positive_moments: moodEntry.copingStrategies || []
-                  })
-                  setIsEditingExisting(true)
-                } else {
-                  // Reset to default for new entry
-                  setCurrentMoodEntry({
-                    energy: 3,
-                    mood: 3,
-                    stress: 3,
-                    confidence: 3,
-                    notes: '',
-                    sleep_hours: 7,
-                    stress_factors: [],
-                    positive_moments: []
-                  })
-                  setIsEditingExisting(false)
-                }
+                // The useEffect will handle loading the entry data automatically
               }}
               className="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
             />
