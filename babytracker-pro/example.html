@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BabyTracker Pro - Authentic Glassy Theme</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: radial-gradient(ellipse at center, #1A3328 0%, #0D1F16 45%, #051108 100%);
+            color: #E8F5F0;
+            min-height: 100vh;
+            line-height: 1.4;
+        }
+
+        .phone-container {
+            max-width: 375px;
+            margin: 20px auto;
+            background: linear-gradient(145deg, #1A3328 0%, #0F241A 50%, #051108 100%);
+            border-radius: 42px;
+            padding: 6px;
+            box-shadow: 
+                0 0 0 1px rgba(82, 140, 115, 0.2),
+                0 25px 80px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(82, 140, 115, 0.15);
+        }
+
+        .screen {
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(82, 140, 115, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(34, 68, 51, 0.15) 0%, transparent 50%),
+                linear-gradient(180deg, #0F241A 0%, #0A1D12 35%, #051108 100%);
+            border-radius: 36px;
+            overflow: hidden;
+            min-height: 700px;
+            position: relative;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 24px 8px;
+            color: #F0F9F6;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .status-icons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .signal-bars {
+            display: flex;
+            gap: 2px;
+        }
+
+        .bar {
+            width: 3px;
+            background: #F0F9F6;
+            border-radius: 1px;
+        }
+
+        .bar:nth-child(1) { height: 4px; }
+        .bar:nth-child(2) { height: 6px; }
+        .bar:nth-child(3) { height: 8px; }
+        .bar:nth-child(4) { height: 10px; }
+
+        .wifi { margin: 0 6px; }
+        .battery {
+            width: 26px;
+            height: 13px;
+            border: 1px solid #F0F9F6;
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .battery::after {
+            content: '';
+            position: absolute;
+            right: -4px;
+            top: 3px;
+            width: 3px;
+            height: 7px;
+            background: #F0F9F6;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .battery-fill {
+            background: #F0F9F6;
+            height: 100%;
+            width: 85%;
+            border-radius: 2px;
+        }
+
+        /* Header */
+        .header {
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            color: #6CC7A4;
+            font-size: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #F0F9F6;
+        }
+
+        .search-btn {
+            color: #6CC7A4;
+            font-size: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Main Content */
+        .content {
+            padding: 8px 24px 100px;
+            flex: 1;
+        }
+
+        /* Glass Card Base */
+        .glass-card {
+            background: 
+                linear-gradient(135deg, 
+                    rgba(45, 80, 60, 0.35) 0%,
+                    rgba(28, 65, 45, 0.25) 25%,
+                    rgba(20, 45, 30, 0.30) 75%,
+                    rgba(15, 35, 22, 0.40) 100%
+                );
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(108, 199, 164, 0.15);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 2px 8px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 12px 48px rgba(0, 0, 0, 0.5),
+                0 4px 16px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            border-color: rgba(108, 199, 164, 0.25);
+        }
+
+        /* Age Card */
+        .age-card {
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .age-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(108, 199, 164, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 70% 70%, rgba(45, 95, 75, 0.12) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .age-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #F0F9F6;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .warning-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+
+        .warning-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .warning-icon {
+            color: #F4B942;
+            font-size: 18px;
+        }
+
+        .warning-text {
+            color: #F0F9F6;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .schedule-btn {
+            background: rgba(108, 199, 164, 0.9);
+            color: #0A1D12;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 
+                0 4px 12px rgba(108, 199, 164, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .schedule-btn:hover {
+            background: rgba(108, 199, 164, 1);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 6px 16px rgba(108, 199, 164, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Vaccine Cards */
+        .vaccine-card {
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vaccine-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(135deg, 
+                    rgba(108, 199, 164, 0.05) 0%,
+                    rgba(45, 95, 75, 0.08) 100%
+                );
+            pointer-events: none;
+        }
+
+        .vaccine-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #F0F9F6;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .vaccine-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            position: relative;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .vaccine-item:last-child {
+            border-bottom: none;
+        }
+
+        .vaccine-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .vaccine-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6CC7A4;
+            box-shadow: 
+                0 0 0 3px rgba(108, 199, 164, 0.2),
+                0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .vaccine-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .vaccine-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #F0F9F6;
+        }
+
+        .vaccine-date {
+            font-size: 14px;
+            color: #A0B5A8;
+        }
+
+        .vaccine-status {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .vaccine-status.completed {
+            color: #A0B5A8;
+        }
+
+        .vaccine-status.due {
+            color: #6CC7A4;
+            font-weight: 600;
+        }
+
+        /* Age Group Headers */
+        .age-group {
+            font-size: 20px;
+            font-weight: 700;
+            color: #F0F9F6;
+            margin: 32px 0 16px;
+            position: relative;
+        }
+
+        .age-group.due {
+            color: #6CC7A4;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: 
+                linear-gradient(135deg, 
+                    rgba(45, 80, 60, 0.85) 0%,
+                    rgba(28, 65, 45, 0.90) 50%,
+                    rgba(15, 35, 22, 0.95) 100%
+                );
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(108, 199, 164, 0.1);
+            padding: 8px 0 32px;
+            box-shadow: 
+                0 -8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 24px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: #6CC7A4;
+            background: rgba(108, 199, 164, 0.1);
+        }
+
+        .nav-item:not(.active) {
+            color: #8FA392;
+        }
+
+        .nav-item:hover:not(.active) {
+            color: #A0B5A8;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item .icon {
+            font-size: 22px;
+        }
+
+        .nav-item .label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Home Indicator */
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(108, 199, 164, 0.15);
+            border: 1px solid rgba(108, 199, 164, 0.3);
+            color: #6CC7A4;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(108, 199, 164, 0.25);
+            transform: scale(1.05);
+        }
+
+        /* Light Theme */
+        body.light {
+            background: radial-gradient(ellipse at center, #E8F5F0 0%, #D9F2EC 45%, #F0F9F7 100%);
+            color: #1E4234;
+        }
+
+        body.light .phone-container {
+            background: linear-gradient(145deg, #F0F9F7 0%, #E8F5F0 50%, #D9F2EC 100%);
+            border-color: rgba(74, 155, 142, 0.2);
+            box-shadow: 
+                0 0 0 1px rgba(74, 155, 142, 0.15),
+                0 25px 80px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        body.light .screen {
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(74, 155, 142, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(208, 236, 225, 0.3) 0%, transparent 50%),
+                linear-gradient(180deg, #F0F9F7 0%, #E8F5F0 35%, #D9F2EC 100%);
+        }
+
+        body.light .glass-card {
+            background: 
+                linear-gradient(135deg, 
+                    rgba(255, 255, 255, 0.85) 0%,
+                    rgba(248, 254, 251, 0.90) 25%,
+                    rgba(240, 249, 247, 0.80) 75%,
+                    rgba(232, 245, 240, 0.75) 100%
+                );
+            border-color: rgba(74, 155, 142, 0.2);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.08),
+                0 2px 8px rgba(0, 0, 0, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                inset 0 -1px 0 rgba(74, 155, 142, 0.05);
+        }
+
+        body.light .status-bar,
+        body.light .page-title,
+        body.light .age-title,
+        body.light .vaccine-section-title,
+        body.light .vaccine-name {
+            color: #1E4234;
+        }
+
+        body.light .warning-text {
+            color: #2D5F4F;
+        }
+
+        body.light .vaccine-date,
+        body.light .vaccine-status.completed {
+            color: #6B7280;
+        }
+
+        body.light .bottom-nav {
+            background: 
+                linear-gradient(135deg, 
+                    rgba(255, 255, 255, 0.95) 0%,
+                    rgba(248, 254, 251, 0.90) 50%,
+                    rgba(240, 249, 247, 0.85) 100%
+                );
+            border-top-color: rgba(74, 155, 142, 0.15);
+        }
+
+        body.light .nav-item:not(.active) {
+            color: #6B7280;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">☀️</button>
+    
+    <div class="phone-container">
+        <div class="screen">
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="time">9:41</div>
+                <div class="status-icons">
+                    <div class="signal-bars">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                    <div class="wifi">📶</div>
+                    <div class="battery">
+                        <div class="battery-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="header">
+                <div class="header-left">
+                    <button class="back-btn">←</button>
+                    <h1 class="page-title">Vaccine Tracker</h1>
+                </div>
+                <button class="search-btn">🔍</button>
+            </div>
+
+            <!-- Main Content -->
+            <div class="content">
+                <!-- Age Status Card -->
+                <div class="glass-card age-card fade-in">
+                    <h2 class="age-title">4 months old</h2>
+                    <div class="warning-row">
+                        <div class="warning-info">
+                            <span class="warning-icon">⚠️</span>
+                            <span class="warning-text">5 vaccines due soon</span>
+                        </div>
+                        <button class="schedule-btn">Schedule</button>
+                    </div>
+                </div>
+
+                <!-- Birth Vaccines -->
+                <div class="glass-card vaccine-card fade-in">
+                    <h3 class="vaccine-section-title">Birth</h3>
+                    
+                    <div class="vaccine-item">
+                        <div class="vaccine-left">
+                            <div class="vaccine-dot"></div>
+                            <div class="vaccine-info">
+                                <div class="vaccine-name">Hepatitis B</div>
+                                <div class="vaccine-date">Aug 15, 2024</div>
+                            </div>
+                        </div>
+                        <div class="vaccine-status completed">Completed</div>
+                    </div>
+                </div>
+
+                <!-- 2 Months Vaccines -->
+                <div class="glass-card vaccine-card fade-in">
+                    <div class="age-group">2 months</div>
+                    <div class="vaccine-status completed" style="text-align: right; margin-bottom: 16px;">Completed</div>
+                    
+                    <div class="vaccine-item">
+                        <div class="vaccine-left">
+                            <div class="vaccine-dot"></div>
+                            <div class="vaccine-name">DTaP</div>
+                        </div>
+                        <div class="vaccine-status completed">Completed</div>
+                    </div>
+
+                    <div class="vaccine-item">
+                        <div class="vaccine-left">
+                            <div class="vaccine-dot"></div>
+                            <div class="vaccine-name">Hib</div>
+                        </div>
+                        <div class="vaccine-status completed">Completed</div>
+                    </div>
+
+                    <div class="vaccine-item">
+                        <div class="vaccine-left">
+                            <div class="vaccine-dot"></div>
+                            <div class="vaccine-name">IPV</div>
+                        </div>
+                        <div class="vaccine-status completed">Completed</div>
+                    </div>
+
+                    <div class="vaccine-item">
+                        <div class="vaccine-left">
+                            <div class="vaccine-dot"></div>
+                            <div class="vaccine-name">PCV13</div>
+                        </div>
+                        <div class="vaccine-status completed">Completed</div>
+                    </div>
+
+                    <div class="vaccine-item">
+                        <div class="vaccine-left">
+                            <div class="vaccine-dot"></div>
+                            <div class="vaccine-name">RV</div>
+                        </div>
+                        <div class="vaccine-status completed">Completed</div>
+                    </div>
+                </div>
+
+                <!-- 4 Months Vaccines (Due) -->
+                <div class="glass-card vaccine-card fade-in">
+                    <div class="age-group due">4 months</div>
+                    <div class="vaccine-status due" style="text-align: right; margin-bottom: 16px;">Due</div>
+                    
+                    <div class="vaccine-item">
+                        <div class="vaccine-left">
+                            <div class="vaccine-dot"></div>
+                            <div class="vaccine-info">
+                                <div class="vaccine-name">Dec 20, 2024</div>
+                            </div>
+                        </div>
+                        <div class="vaccine-status due">Dec 20, 2024</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav">
+                <div class="nav-items">
+                    <div class="nav-item">
+                        <span class="icon">🏠</span>
+                        <span class="label">Overview</span>
+                    </div>
+                    <div class="nav-item active">
+                        <span class="icon">💉</span>
+                        <span class="label">Vaccines</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">🩺</span>
+                        <span class="label">Symptom</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">💊</span>
+                        <span class="label">Med</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">📊</span>
+                        <span class="label">Milestone</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Home Indicator -->
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+
+    <script>
+        let isLight = false;
+
+        function toggleTheme() {
+            isLight = !isLight;
+            document.body.classList.toggle('light');
+            document.querySelector('.theme-toggle').textContent = isLight ? '🌙' : '☀️';
+        }
+
+        // Add staggered fade-in animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const items = document.querySelectorAll('.fade-in');
+            items.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html>

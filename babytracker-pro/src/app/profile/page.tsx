@@ -346,7 +346,7 @@ export default function ProfilePage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                        isActive ? 'bg-amber-500 text-white' : 'bg-gray-100 '
+                        isActive ? 'bg-icon-container-active text-white' : 'bg-icon-container'
                       }`}>
                         <Icon className="w-6 h-6" />
                       </div>
@@ -424,7 +424,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Achievement Section */}
-        <div className="glass-card backdrop-blur-sm rounded-3xl p-6 shadow-large">
+        <div className="glass-card glass-card-vaccine fade-in backdrop-blur-sm rounded-3xl p-6 shadow-large">
           <h3 className="font-bold mb-4 flex items-center">
             <Award className="w-5 h-5 mr-2 text-yellow-500" />
             Vos accomplissements
@@ -459,12 +459,12 @@ export default function ProfilePage() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3">
-          <button className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 rounded-2xl font-medium shadow-large flex items-center justify-center space-x-2 hover:scale-105 transition-transform">
+          <button className="btn-age-status text-white p-4 rounded-2xl font-medium shadow-large flex items-center justify-center space-x-2 hover:scale-105 transition-transform relative z-10">
             <Download className="w-5 h-5" />
             <span>Exporter mes données</span>
           </button>
           
-          <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-2xl font-medium shadow-large flex items-center justify-center space-x-2 hover:scale-105 transition-transform">
+          <button className="btn-age-status text-white p-4 rounded-2xl font-medium shadow-large flex items-center justify-center space-x-2 hover:scale-105 transition-transform relative z-10">
             <Users className="w-5 h-5" />
             <span>Inviter famille</span>
           </button>
@@ -560,8 +560,8 @@ function ProfileSection({ userProfile, updateUserProfile, avatarOptions, isEditi
                   onClick={() => setEditForm(prev => ({ ...prev, avatar: emoji }))}
                   className={`w-12 h-12 rounded-xl text-2xl transition-all ${
                     editForm.avatar === emoji 
-                      ? 'bg-amber-100 border-2 border-amber-500 scale-110' 
-                      : 'bg-gray-100 hover:bg-gray-200'
+                      ? 'bg-icon-container-active border-2 border-primary-500 scale-110' 
+                      : 'bg-surface-light hover:bg-surface-medium'
                   }`}
                 >
                   {emoji}
@@ -633,7 +633,7 @@ function ProfileSection({ userProfile, updateUserProfile, avatarOptions, isEditi
       ) : (
         <div className="space-y-4">
           {/* Display Mode */}
-          <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
+          <div className="flex items-center space-x-4 p-4 bg-surface-light rounded-xl">
             <div className="text-4xl">{userProfile.avatar}</div>
             <div>
               <h5 className="font-medium text-gray-800">
@@ -822,8 +822,8 @@ function BabySection({ baby, babies, onUpdateBaby }: {
                   onClick={() => setBabyForm((prev: any) => ({ ...prev, avatar: emoji }))}
                   className={`w-12 h-12 rounded-xl text-2xl transition-all ${
                     babyForm.avatar === emoji 
-                      ? 'bg-amber-100 border-2 border-amber-500 scale-110' 
-                      : 'bg-gray-100 hover:bg-gray-200'
+                      ? 'bg-icon-container-active border-2 border-primary-500 scale-110' 
+                      : 'bg-surface-light hover:bg-surface-medium'
                   }`}
                 >
                   {emoji}
@@ -866,7 +866,7 @@ function BabySection({ baby, babies, onUpdateBaby }: {
           </div>
 
           {/* Health Info */}
-          <div className="p-4 bg-gray-50 rounded-xl">
+          <div className="p-4 bg-surface-light rounded-xl">
             <h6 className="font-medium  mb-2 flex items-center">
               <Heart className="w-4 h-4 mr-2 text-red-500" />
               Informations santé
@@ -921,8 +921,8 @@ function SettingsSection({ settings, updateSettings, colorSchemes }: {
                   onClick={() => setColorScheme(scheme.value)}
                   className={`p-3 rounded-xl border-2 transition-all ${
                     colorScheme === scheme.value 
-                      ? 'border-primary-500 ring-2 ring-primary-200 bg-primary-50 dark:bg-primary-900 dark:border-primary-400' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800'
+                      ? 'border-primary-500 ring-2 ring-primary-200 bg-icon-container-active' 
+                      : 'border-gray-200 hover:border-gray-300 bg-surface-light hover:bg-surface-medium'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
@@ -950,8 +950,8 @@ function SettingsSection({ settings, updateSettings, colorSchemes }: {
                     onClick={() => setTheme(themeOption.value as 'light' | 'dark' | 'auto')}
                     className={`p-3 rounded-xl border-2 transition-all ${
                       theme === themeOption.value 
-                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200 dark:bg-primary-900 dark:border-primary-400' 
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800'
+                        ? 'border-primary-500 bg-icon-container-active ring-2 ring-primary-200' 
+                        : 'border-gray-200 hover:border-gray-300 bg-surface-light hover:bg-surface-medium'
                     }`}
                   >
                     <Icon className={`w-5 h-5 mx-auto mb-1 ${
@@ -984,8 +984,8 @@ function SettingsSection({ settings, updateSettings, colorSchemes }: {
                   onClick={() => setFontSize(size.value)}
                   className={`p-3 rounded-xl border-2 transition-all ${
                     fontSize === size.value 
-                      ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-200 dark:bg-primary-900 dark:border-primary-400' 
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-800'
+                      ? 'border-primary-500 bg-icon-container-active ring-2 ring-primary-200' 
+                      : 'border-gray-200 hover:border-gray-300 bg-surface-light hover:bg-surface-medium'
                   }`}
                 >
                   <div className={`font-medium ${
@@ -1072,8 +1072,8 @@ function SettingsSection({ settings, updateSettings, colorSchemes }: {
                   onClick={() => updateSetting('weightUnit', unit.value)}
                   className={`p-2 rounded-lg border text-sm transition-all ${
                     settings.weightUnit === unit.value 
-                      ? 'border-amber-500 bg-amber-50' 
-                      : 'border-gray-200 hover:bg-gray-50'
+                      ? 'border-primary-500 bg-icon-container-active' 
+                      : 'border-gray-200 bg-surface-light hover:bg-surface-medium'
                   }`}
                 >
                   {unit.label}
@@ -1094,8 +1094,8 @@ function SettingsSection({ settings, updateSettings, colorSchemes }: {
                   onClick={() => updateSetting('heightUnit', unit.value)}
                   className={`p-2 rounded-lg border text-sm transition-all ${
                     settings.heightUnit === unit.value 
-                      ? 'border-amber-500 bg-amber-50' 
-                      : 'border-gray-200 hover:bg-gray-50'
+                      ? 'border-primary-500 bg-icon-container-active' 
+                      : 'border-gray-200 bg-surface-light hover:bg-surface-medium'
                   }`}
                 >
                   {unit.label}
@@ -1116,8 +1116,8 @@ function SettingsSection({ settings, updateSettings, colorSchemes }: {
                   onClick={() => updateSetting('volumeUnit', unit.value)}
                   className={`p-2 rounded-lg border text-sm transition-all ${
                     settings.volumeUnit === unit.value 
-                      ? 'border-amber-500 bg-amber-50' 
-                      : 'border-gray-200 hover:bg-gray-50'
+                      ? 'border-primary-500 bg-icon-container-active' 
+                      : 'border-gray-200 bg-surface-light hover:bg-surface-medium'
                   }`}
                 >
                   {unit.label}
@@ -1138,8 +1138,8 @@ function SettingsSection({ settings, updateSettings, colorSchemes }: {
                   onClick={() => updateSetting('temperatureUnit', unit.value)}
                   className={`p-2 rounded-lg border text-sm transition-all ${
                     settings.temperatureUnit === unit.value 
-                      ? 'border-amber-500 bg-amber-50' 
-                      : 'border-gray-200 hover:bg-gray-50'
+                      ? 'border-primary-500 bg-icon-container-active' 
+                      : 'border-gray-200 bg-surface-light hover:bg-surface-medium'
                   }`}
                 >
                   {unit.label}
@@ -1455,7 +1455,7 @@ function NotificationsSection({ settings, updateSettings }: {
 
       {/* Test Notification */}
       <div className="glass-card backdrop-blur-sm rounded-2xl p-6 shadow-medium">
-        <button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 rounded-xl font-medium shadow-large flex items-center justify-center space-x-2 hover:scale-105 transition-transform">
+        <button className="w-full btn-age-status text-white py-3 rounded-xl font-medium shadow-large flex items-center justify-center space-x-2 hover:scale-105 transition-transform relative z-10">
           <Volume2 className="w-5 h-5" />
           <span>Tester les notifications</span>
         </button>
@@ -1509,7 +1509,7 @@ function FamilySection({ familyMembers, setFamilyMembers, showInviteModal, setSh
 
         <div className="space-y-3">
           {familyMembers.map(member => (
-            <div key={member.id} className="p-4 bg-gray-50 rounded-xl">
+            <div key={member.id} className="p-4 bg-surface-light rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${
@@ -1846,7 +1846,7 @@ function PrivacySection({ settings, setSettings, showDeleteConfirm, setShowDelet
                 </button>
                 <button 
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="w-full bg-gray-200  py-3 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
+                  className="w-full bg-surface-light py-3 rounded-xl font-semibold hover:bg-surface-medium transition-colors"
                 >
                   Annuler
                 </button>
@@ -1880,7 +1880,7 @@ function InviteModal({ onClose, onInvite }: {
       <div className="bg-white rounded-3xl p-6 w-full max-w-md animate-slide-down">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold">Inviter un membre</h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl">
+          <button onClick={onClose} className="p-2 hover:bg-surface-light rounded-xl">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -1935,7 +1935,7 @@ function InviteModal({ onClose, onInvite }: {
           </button>
           <button
             onClick={onClose}
-            className="flex-1 bg-gray-200  py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+            className="flex-1 bg-surface-light py-3 rounded-xl font-semibold hover:bg-surface-medium transition-all"
           >
             Annuler
           </button>

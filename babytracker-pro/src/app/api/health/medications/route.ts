@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('Received medication data:', JSON.stringify(body, null, 2))
+    
     const {
       babyId,
       medication,
@@ -53,8 +55,12 @@ export async function POST(request: NextRequest) {
       notes
     } = body
 
-    if (!babyId || !medication || !dosage || !unit || !frequency || !startDate) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!babyId || !medication || !medication.name || !dosage || !unit || !frequency || !startDate) {
+      return NextResponse.json({ 
+        error: 'Missing required fields', 
+        required: ['babyId', 'medication.name', 'dosage', 'unit', 'frequency', 'startDate'],
+        received: { babyId: !!babyId, medication: !!medication, medicationName: !!medication?.name, dosage: !!dosage, unit: !!unit, frequency: !!frequency, startDate: !!startDate }
+      }, { status: 400 })
     }
 
     // First, find or create the medication
@@ -99,7 +105,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(medicationEntry, { status: 201 })
   } catch (error) {
     console.error('Error creating medication entry:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 

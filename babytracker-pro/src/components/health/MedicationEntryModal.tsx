@@ -158,7 +158,8 @@ const MedicationEntryModal: React.FC<MedicationEntryModalProps> = ({
   const [formData, setFormData] = useState<Partial<MedicationEntryData>>({
     weight: babyWeight,
     administrationRoute: 'oral',
-    startDate: new Date()
+    startDate: new Date(),
+    unit: 'mg'
   })
   
   const [calculatedDosage, setCalculatedDosage] = useState<{
@@ -194,7 +195,7 @@ const MedicationEntryModal: React.FC<MedicationEntryModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) {
-      setFormData({ weight: babyWeight, administrationRoute: 'oral', startDate: new Date() })
+      setFormData({ weight: babyWeight, administrationRoute: 'oral', startDate: new Date(), unit: 'mg' })
       setSelectedMedication(null)
       setCalculatedDosage(null)
       setShowDosageCalculator(false)
@@ -264,13 +265,16 @@ const MedicationEntryModal: React.FC<MedicationEntryModalProps> = ({
     const newErrors: Record<string, string> = {}
 
     if (!formData.name) newErrors.name = 'Nom du médicament requis'
+    if (!formData.activeIngredient) newErrors.activeIngredient = 'Principe actif requis'
     if (!formData.dosage) newErrors.dosage = 'Dosage requis'
+    if (!formData.unit) newErrors.unit = 'Unité requise'
     if (!formData.frequency) newErrors.frequency = 'Fréquence requise'
+    if (!formData.duration) newErrors.duration = 'Durée du traitement requise'
     if (!formData.reason) newErrors.reason = 'Raison du traitement requise'
     if (!formData.startDate) newErrors.startDate = 'Date de début requise'
 
     // Check age restrictions
-    if (selectedMedication) {
+    if (selectedMedication && selectedMedication !== 'custom') {
       const med = PEDIATRIC_MEDICATIONS[selectedMedication as keyof typeof PEDIATRIC_MEDICATIONS]
       if (babyAgeWeeks < med.minAgeWeeks) {
         newErrors.age = `Ce médicament n'est pas autorisé avant ${Math.floor(med.minAgeWeeks / 4.33)} mois`
@@ -286,25 +290,27 @@ const MedicationEntryModal: React.FC<MedicationEntryModalProps> = ({
     
     setSubmitting(true)
     try {
+      console.log('Form data before creating medicationData:', formData)
 
-    const medicationData: MedicationEntryData = {
-      name: formData.name!,
-      activeIngredient: formData.activeIngredient!,
-      dosage: formData.dosage!,
-      unit: formData.unit!,
-      frequency: formData.frequency!,
-      duration: formData.duration!,
-      startDate: formData.startDate!,
-      endDate: formData.endDate,
-      administrationRoute: formData.administrationRoute!,
-      prescribedBy: formData.prescribedBy,
-      reason: formData.reason!,
-      temperature: formData.temperature,
-      weight: formData.weight!,
-      notes: formData.notes,
-      reminders: formData.reminders
-    }
-
+      const medicationData: MedicationEntryData = {
+        name: formData.name!,
+        activeIngredient: formData.activeIngredient!,
+        dosage: formData.dosage!,
+        unit: formData.unit!,
+        frequency: formData.frequency!,
+        duration: formData.duration!,
+        startDate: formData.startDate!,
+        endDate: formData.endDate,
+        administrationRoute: formData.administrationRoute!,
+        prescribedBy: formData.prescribedBy,
+        reason: formData.reason!,
+        temperature: formData.temperature,
+        weight: formData.weight!,
+        notes: formData.notes,
+        reminders: formData.reminders
+      }
+      
+      console.log('Medication data being passed to onSave:', medicationData)
       await onSave(medicationData)
     } catch (error) {
       console.error('Error submitting medication:', error)
@@ -542,6 +548,7 @@ const MedicationEntryModal: React.FC<MedicationEntryModalProps> = ({
                       className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
                       placeholder="paracetamol, ibuprofène..."
                     />
+                    {errors.activeIngredient && <p className="text-sm text-red-600 mt-1">{errors.activeIngredient}</p>}
                   </div>
                 </div>
 
@@ -575,6 +582,7 @@ const MedicationEntryModal: React.FC<MedicationEntryModalProps> = ({
                       <option value="drops">gouttes</option>
                       <option value="suppository">suppositoire</option>
                     </select>
+                    {errors.unit && <p className="text-sm text-red-600 mt-1">{errors.unit}</p>}
                   </div>
 
                   <div>
@@ -621,6 +629,7 @@ const MedicationEntryModal: React.FC<MedicationEntryModalProps> = ({
                       className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
                       placeholder="3 jours, jusqu'à amélioration..."
                     />
+                    {errors.duration && <p className="text-sm text-red-600 mt-1">{errors.duration}</p>}
                   </div>
                 </div>
 

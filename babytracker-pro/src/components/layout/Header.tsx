@@ -2,7 +2,7 @@
 'use client'
 
 import React, { useState, useCallback, useEffect } from 'react'
-import { Bell, ChevronDown, Settings, User, LogOut, Baby, HelpCircle, X } from 'lucide-react'
+import { Bell, ChevronDown, Settings, User, LogOut, Baby, HelpCircle, X, Home } from 'lucide-react'
 import { useBabyTrackerStore } from '@/lib/store'
 import Link from 'next/link'
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch'
@@ -75,11 +75,11 @@ const NotificationPanel = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =
   if (!isOpen) return null
 
   return (
-    <div className="absolute right-0 top-16 w-80 max-h-96 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden animate-slide-down">
+    <div className="absolute right-0 top-20 w-80 max-h-96 glass-card backdrop-blur-lg rounded-3xl shadow-2xl border overflow-hidden z-50">
       {/* Header du panel */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80">
+      <div className="p-4 border-b glass-card">
         <div className="flex items-center justify-between">
-          <h3 className="font-bold dark:text-gray-200">Notifications ({notifications.length})</h3>
+          <h3 className="font-bold text-forest-50">Notifications ({notifications.length})</h3>
           <div className="flex items-center space-x-2">
             {notifications.some(n => !n.isRead) && (
               <button
@@ -104,8 +104,8 @@ const NotificationPanel = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =
         {notifications.length === 0 ? (
           <div className="p-6 text-center ">
             <Bell className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="font-medium dark:text-gray-400">Aucune notification</p>
-            <p className="text-sm dark:text-gray-500">Vous êtes à jour ! 🎉</p>
+            <p className="font-medium text-forest-200">Aucune notification</p>
+            <p className="text-sm text-forest-300">Vous êtes à jour ! 🎉</p>
           </div>
         ) : (
           <div className="p-2 space-y-2">
@@ -135,11 +135,11 @@ const NotificationPanel = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =
                         }`}>
                           {notification.title}
                         </h4>
-                        <span className="text-xs  ml-2">
+                        <span className="text-xs text-forest-300 ml-2">
                           {getTimeAgo(notification.createdAt)}
                         </span>
                       </div>
-                      <p className="text-xs  mt-1">
+                      <p className="text-xs text-forest-100 mt-1">
                         {notification.message}
                       </p>
                       {!notification.isRead && (
@@ -166,15 +166,15 @@ const NotificationPanel = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =
 
       {/* Footer avec actions */}
       {notifications.length > 0 && (
-        <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80">
+        <div className="p-3 border-t glass-card">
           <div className="flex justify-between text-xs">
             <button
               onClick={clearOldNotifications}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-forest-200 hover:text-forest-100"
             >
               Effacer lues
             </button>
-            <span className="text-gray-500">
+            <span className="text-forest-200">
               {notifications.filter(n => !n.isRead).length} non lues
             </span>
           </div>
@@ -239,8 +239,11 @@ export default function Header({ currentPage, className = '' }: HeaderProps) {
 
   const handleProfileAction = useCallback((action: string) => {
     setIsProfileOpen(false)
-    // TODO: Implémenter les actions (profil, paramètres, déconnexion)
-    console.log(`Action: ${action}`)
+    // Actions are now handled by Link components or specific handlers
+    if (action === 'logout') {
+      // TODO: Implement logout functionality
+      console.log('Logout action triggered')
+    }
   }, [])
 
   // ✅ User data
@@ -252,21 +255,18 @@ export default function Header({ currentPage, className = '' }: HeaderProps) {
   }
 
   return (
-    <header className={`sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 theme-forest:bg-forest-600/90 theme-pistacchio:bg-forest-600/90 border-b border-white/20 dark:border-gray-700/50 theme-forest:border-mint-400/10 theme-pistacchio:border-mint-400/10 shadow-lg ${className}`}>
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* ✅ Logo + Page Title + Theme Switch */}
+    <header className={`sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 theme-forest:bg-forest-600/90 theme-pistacchio:bg-forest-600/90 border-b border-white/20 dark:border-gray-700/50 theme-forest:border-mint-400/10 theme-pistacchio:border-mint-400/10 shadow-lg h-20 ${className}`}>
+      <div className="px-6 h-full flex items-center">
+        <div className="flex items-center justify-between w-full">
+          {/* ✅ Logo + Page Title */}
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-110">
               <Baby className="w-6 h-6 text-white" />
             </div>
             <div>
-              <div className="flex items-center space-x-3">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-400 dark:to-primary-500 bg-clip-text text-transparent">
-                  {currentPage}
-                </h1>
-                <ThemeSwitch />
-              </div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-400 dark:to-primary-500 bg-clip-text text-transparent">
+                {currentPage}
+              </h1>
               {currentBaby && (
                 <ClientOnly fallback={<p className="text-sm text-gray-400">{userData.babyName}</p>}>
                   <p className="text-sm  dark:text-gray-400">
@@ -277,10 +277,19 @@ export default function Header({ currentPage, className = '' }: HeaderProps) {
             </div>
           </div>
 
-          {/* ✅ Right Side: Notifications + Avatar */}
+          {/* ✅ Right Side: Home + Notifications + Avatar */}
           <div className="flex items-center space-x-3">
+            {/* Home Button */}
+            <Link 
+              href="/"
+              className="p-2 hover:bg-primary-50 rounded-xl transition-all duration-300 transform hover:scale-110"
+              aria-label="Accueil"
+            >
+              <Home className="w-6 h-6  dark:text-gray-400" />
+            </Link>
+
             {/* Notifications Bell avec vraies données */}
-            <div className="relative" data-notification-panel>
+            <div className="relative overflow-visible" data-notification-panel>
               <ClientOnly fallback={
                 <button className="relative p-2 hover:bg-primary-50 rounded-xl transition-all duration-300 transform hover:scale-110">
                   <Bell className="w-6 h-6  dark:text-gray-400" />
@@ -310,7 +319,7 @@ export default function Header({ currentPage, className = '' }: HeaderProps) {
             </div>
 
             {/* User Profile Dropdown */}
-            <div className="relative" data-profile-dropdown>
+            <div className="relative overflow-visible" data-profile-dropdown>
               <button 
                 onClick={handleProfileToggle}
                 className="flex items-center space-x-2 p-2 hover:bg-primary-50 rounded-2xl transition-all duration-300 transform hover:scale-105"
@@ -325,22 +334,22 @@ export default function Header({ currentPage, className = '' }: HeaderProps) {
               {/* ✅ Profile Dropdown Menu */}
               <ClientOnly>
                 {isProfileOpen && (
-                  <div className="absolute right-0 top-16 w-64 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-6 animate-slide-down">
-                    {/* User Info */}
-                    <div className="text-center mb-4">
-                      <div className="w-16 h-16 bg-gradient-to-r from-primary-400 to-primary-500 rounded-3xl flex items-center justify-center text-white text-2xl mx-auto mb-3 shadow-lg">
-                        {userData.avatar}
-                      </div>
-                      <h3 className="font-bold dark:text-gray-200">{userData.name}</h3>
-                      <ClientOnly fallback={<p className="text-sm text-gray-400">Parent</p>}>
-                        <p className="text-sm  dark:text-gray-400">
-                          {currentBaby ? `${userProfile?.role === 'mother' ? 'Maman' : userProfile?.role === 'father' ? 'Papa' : userProfile?.role === 'guardian' ? 'Tuteur/Tutrice' : userProfile?.role === 'grandparent' ? 'Grand-parent' : 'Parent'} de ${userData.babyName}` : 'Parent'}
-                        </p>
-                      </ClientOnly>
+                  <div className="absolute right-0 top-20 w-64 glass-card backdrop-blur-lg rounded-3xl shadow-2xl border p-6 z-50">
+                  {/* User Info */}
+                  <div className="text-center mb-4">
+                    <div className="w-16 h-16 bg-gradient-to-r from-primary-400 to-primary-500 rounded-3xl flex items-center justify-center text-white text-2xl mx-auto mb-3 shadow-lg">
+                      {userData.avatar}
                     </div>
-                    
-                    {/* Menu Actions */}
-                    <div className="space-y-2">
+                    <h3 className="font-bold text-forest-50">{userData.name}</h3>
+                    <ClientOnly fallback={<p className="text-sm text-gray-400">Parent</p>}>
+                      <p className="text-sm text-forest-200">
+                        {currentBaby ? `${userProfile?.role === 'mother' ? 'Maman' : userProfile?.role === 'father' ? 'Papa' : userProfile?.role === 'guardian' ? 'Tuteur/Tutrice' : userProfile?.role === 'grandparent' ? 'Grand-parent' : 'Parent'} de ${userData.babyName}` : 'Parent'}
+                      </p>
+                    </ClientOnly>
+                  </div>
+                  
+                  {/* Menu Actions */}
+                  <div className="space-y-2">
 <Link 
   href="/profile"
   onClick={() => {
@@ -349,36 +358,49 @@ export default function Header({ currentPage, className = '' }: HeaderProps) {
   }}
   className="w-full flex items-center space-x-3 p-3 hover:bg-primary-50 rounded-2xl transition-all duration-300 text-left"
 >
-  <User className="w-5 h-5 " />
-  <span className="text-gray-700">Mon Profil</span>
+  <User className="w-5 h-5 text-forest-200" />
+  <span className="text-forest-50">Mon Profil</span>
 </Link>
-                      <button 
-                        onClick={() => handleProfileAction('settings')}
-                        className="w-full flex items-center space-x-3 p-3 hover:bg-primary-50 rounded-2xl transition-all duration-300 text-left"
-                      >
-                        <Settings className="w-5 h-5 " />
-                        <span className="text-gray-700">Paramètres</span>
-                      </button>
-                      
-                      <button 
-                        onClick={() => handleProfileAction('help')}
-                        className="w-full flex items-center space-x-3 p-3 hover:bg-primary-50 rounded-2xl transition-all duration-300 text-left"
-                      >
-                        <HelpCircle className="w-5 h-5 " />
-                        <span className="text-gray-700">Aide</span>
-                      </button>
-                      
-                      <hr className="border-gray-200 my-2" />
-                      
-                      <button 
-                        onClick={() => handleProfileAction('logout')}
-                        className="w-full flex items-center space-x-3 p-3 hover:bg-red-50 rounded-2xl transition-all duration-300 text-left"
-                      >
-                        <LogOut className="w-5 h-5 text-red-500" />
-                        <span className="text-red-600">Déconnexion</span>
-                      </button>
+                    <Link 
+                      href="/profile"
+                      onClick={() => {
+                        handleProfileAction('settings')
+                        setIsProfileOpen(false)
+                      }}
+                      className="w-full flex items-center space-x-3 p-3 hover:bg-primary-50 rounded-2xl transition-all duration-300 text-left"
+                    >
+                      <Settings className="w-5 h-5 text-forest-200" />
+                      <span className="text-forest-50">Paramètres</span>
+                    </Link>
+                    
+                    {/* Theme Switch in Profile Menu */}
+                    <div className="flex items-center justify-between p-3 hover:bg-primary-50 rounded-2xl transition-all duration-300">
+                      <div className="flex items-center space-x-3">
+                        <Settings className="w-5 h-5 text-forest-200" />
+                        <span className="text-forest-50">Thème</span>
+                      </div>
+                      <ThemeSwitch />
                     </div>
+                    
+                    <button 
+                      onClick={() => handleProfileAction('help')}
+                      className="w-full flex items-center space-x-3 p-3 hover:bg-primary-50 rounded-2xl transition-all duration-300 text-left"
+                    >
+                      <HelpCircle className="w-5 h-5 text-forest-200" />
+                      <span className="text-forest-50">Aide</span>
+                    </button>
+                    
+                    <hr className="border-gray-200 my-2" />
+                    
+                    <button 
+                      onClick={() => handleProfileAction('logout')}
+                      className="w-full flex items-center space-x-3 p-3 hover:bg-red-50 rounded-2xl transition-all duration-300 text-left"
+                    >
+                      <LogOut className="w-5 h-5 text-red-500" />
+                      <span className="text-red-600">Déconnexion</span>
+                    </button>
                   </div>
+                </div>
                 )}
               </ClientOnly>
             </div>

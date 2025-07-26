@@ -229,27 +229,125 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
   const handleSaveMedication = async (medicationData: MedicationEntryData) => {
     try {
       setSaving(true)
+      
+      if (!babyId) {
+        alert('Erreur: ID bébé manquant')
+        return
+      }
+      
+      // Validate required medication data
+      if (!medicationData.name || !medicationData.dosage || !medicationData.unit || !medicationData.frequency) {
+        alert('Erreur: Données de médicament incomplètes')
+        console.error('Missing medication data:', medicationData)
+        return
+      }
+      
+      // Map the modal data to API format
+      const apiData = {
+        babyId,
+        medication: {
+          name: medicationData.name,
+          activeIngredient: medicationData.activeIngredient,
+          type: 'prescription',
+          concentration: '',
+          form: medicationData.unit
+        },
+        dosage: medicationData.dosage,
+        unit: medicationData.unit,
+        frequency: medicationData.frequency,
+        startDate: medicationData.startDate.toISOString(),
+        endDate: medicationData.endDate?.toISOString(),
+        prescribedBy: medicationData.prescribedBy || '',
+        notes: medicationData.notes || '',
+        ...(editingItem && { id: editingItem.id })
+      }
+      
+      console.log('Sending medication data to API:', JSON.stringify(apiData, null, 2))
+      
       const response = await fetch('/api/health/medications', {
         method: editingItem ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...medicationData,
-          babyId,
-          ...(editingItem && { id: editingItem.id })
-        })
+        body: JSON.stringify(apiData)
       })
 
       if (response.ok) {
+        const savedMedication = await response.json()
+        console.log('Medication saved successfully:', savedMedication)
+        
         // Reload medications data
         const medicationsRes = await fetch(`/api/health/medications?babyId=${babyId}`)
-        const medications = medicationsRes.ok ? await medicationsRes.json() : []
-        setHealthData((prev: any) => ({ ...prev, medications: Array.isArray(medications) ? medications : [] }))
+        if (medicationsRes.ok) {
+          const medications = await medicationsRes.json()
+          setHealthData((prev: any) => ({ 
+            ...prev, 
+            medications: Array.isArray(medications) ? medications : [] 
+          }))
+        }
         
         setShowMedicationModal(false)
         setEditingItem(null)
+      } else {
+        const errorText = await response.text()
+        console.error('Failed to save medication. Response status:', response.status)
+        console.error('Response body:', errorText)
+        
+        let errorData
+        try {
+          errorData = JSON.parse(errorText)
+        } catch (e) {
+          errorData = { error: 'Invalid JSON response', body: errorText }
+        }
+        
+        alert(`Erreur lors de l'enregistrement: ${errorData.error || errorData.details || 'Erreur inconnue'}`)
       }
     } catch (error) {
       console.error('Error saving medication:', error)
+      alert('Erreur de connexion lors de l\'enregistrement du médicament')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleGiveDose = async (medicationEntry: any) => {
+    try {
+      setSaving(true)
+      
+      const doseData = {
+        medicationEntryId: medicationEntry.id,
+        dosage: medicationEntry.dosage,
+        unit: medicationEntry.unit,
+        time: new Date().toISOString()
+      }
+      
+      const response = await fetch('/api/health/medications/doses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(doseData)
+      })
+      
+      if (response.ok) {
+        const savedDose = await response.json()
+        console.log('Dose recorded successfully:', savedDose)
+        
+        // Reload medications data to show updated dose history
+        const medicationsRes = await fetch(`/api/health/medications?babyId=${babyId}`)
+        if (medicationsRes.ok) {
+          const medications = await medicationsRes.json()
+          setHealthData((prev: any) => ({ 
+            ...prev, 
+            medications: Array.isArray(medications) ? medications : [] 
+          }))
+        }
+        
+        alert('Dose enregistrée avec succès!')
+      } else {
+        const errorData = await response.json()
+        console.error('Failed to record dose:', errorData)
+        alert(`Erreur lors de l'enregistrement de la dose: ${errorData.error || 'Erreur inconnue'}`)
+      }
+    } catch (error) {
+      console.error('Error recording dose:', error)
+      alert('Erreur de connexion lors de l\'enregistrement de la dose')
     } finally {
       setSaving(false)
     }
@@ -285,7 +383,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
 
   const HealthOverview = () => (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+      <div className="glass-card rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             État de santé général
@@ -300,7 +398,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <div className="glass-card rounded-xl p-4">
             <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
               Dernière visite
             </div>
@@ -318,7 +416,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
             </div>
           </div>
 
-          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+          <div className="glass-card rounded-xl p-4">
             <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
               Vaccins à jour
             </div>
@@ -370,7 +468,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+      <div className="glass-card rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
           Activité récente
         </h3>
@@ -378,19 +476,17 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         <div className="space-y-3">
           {/* Recent symptoms */}
           {(healthData.symptoms || []).slice(0, 2).map((symptom: any) => (
-            <div key={symptom.id} className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                  <Stethoscope className="w-4 h-4 text-white" />
+            <div key={symptom.id} className="flex items-center space-x-3 p-3 glass-card rounded-xl">
+              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                <Stethoscope className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {symptom.symptoms?.map((s: any) => s.name).join(', ') || 'Symptômes'}
                 </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {symptom.symptoms?.map((s: any) => s.name).join(', ') || 'Symptômes'}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                    <Calendar className="w-3 h-3 mr-1" />
-                    {new Date(symptom.date).toLocaleDateString('fr-FR')}
-                  </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                  <Calendar className="w-3 h-3 mr-1" />
+                  {new Date(symptom.date).toLocaleDateString('fr-FR')}
                 </div>
               </div>
               <button className="text-sm text-orange-600 dark:text-orange-400 font-medium">
@@ -413,7 +509,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
   )
 
   const VaccineTracker = () => (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+    <div className="glass-card rounded-2xl p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Suivi des vaccinations
@@ -444,11 +540,11 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         <div className="space-y-4">
           {(healthData.vaccines || []).length > 0 ? (
             (healthData.vaccines || []).map((vaccine: any) => (
-              <div key={vaccine.id} className={`p-4 rounded-xl border-2 ${
-                vaccine.status === 'completed' ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' :
-                vaccine.status === 'overdue' ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' :
-                vaccine.status === 'due' ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800' :
-                'bg-gray-50 border-gray-200 dark:bg-gray-700/50 dark:border-gray-600'
+              <div key={vaccine.id} className={`glass-card p-4 rounded-xl border-2 ${
+                vaccine.status === 'completed' ? 'border-green-200 dark:border-green-800' :
+                vaccine.status === 'overdue' ? 'border-red-200 dark:border-red-800' :
+                vaccine.status === 'due' ? 'border-yellow-200 dark:border-yellow-800' :
+                'border-gray-200 dark:border-gray-600'
               }`}>
                 <div className="flex items-center justify-between">
                   <div>
@@ -515,7 +611,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         return <VaccineTracker />
       case 'symptoms':
         return (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Suivi des symptômes
@@ -534,7 +630,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
             {(healthData.symptoms || []).length > 0 ? (
               <div className="space-y-4">
                 {(healthData.symptoms || []).map((symptom: any) => (
-                  <div key={symptom.id} className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+                  <div key={symptom.id} className="glass-card p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <div className="font-medium text-gray-900 dark:text-gray-100">
@@ -571,7 +667,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         )
       case 'medications':
         return (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Gestion des médicaments
@@ -590,7 +686,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
             {(healthData.medications || []).length > 0 ? (
               <div className="space-y-4">
                 {(healthData.medications || []).map((medication: any) => (
-                  <div key={medication.id} className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+                  <div key={medication.id} className="glass-card p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <div className="font-medium text-gray-900 dark:text-gray-100">
@@ -612,6 +708,17 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
                         }`}>
                           {medication.endDate && new Date(medication.endDate) < new Date() ? 'Terminé' : 'Actif'}
                         </span>
+                        {/* Give Dose Button - only for active medications */}
+                        {(!medication.endDate || new Date(medication.endDate) > new Date()) && (
+                          <button
+                            onClick={() => handleGiveDose(medication)}
+                            disabled={saving}
+                            className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-medium disabled:opacity-50 transition-colors"
+                            title="Donner une dose"
+                          >
+                            💊 Dose
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setEditingItem(medication)
@@ -623,6 +730,32 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
                         </button>
                       </div>
                     </div>
+                    {/* Dose History */}
+                    {medication.doses && medication.doses.length > 0 && (
+                      <div className="mt-3 border-t pt-3">
+                        <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          📋 Dernières doses:
+                        </div>
+                        <div className="space-y-1">
+                          {medication.doses.slice(0, 3).map((dose: any, index: number) => (
+                            <div key={dose.id || index} className="flex justify-between items-center text-xs text-gray-600 dark:text-gray-400">
+                              <span>
+                                {dose.dosage} {dose.unit}
+                              </span>
+                              <span>
+                                {new Date(dose.time).toLocaleDateString('fr-FR')} à {new Date(dose.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                          ))}
+                          {medication.doses.length > 3 && (
+                            <div className="text-xs text-gray-500 dark:text-gray-500">
+                              ... et {medication.doses.length - 3} autre{medication.doses.length - 3 > 1 ? 's' : ''}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
                     {medication.reason && (
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         <span className="font-medium">Raison:</span> {medication.reason}
@@ -642,14 +775,14 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         )
       case 'emergency':
         return (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="glass-card rounded-2xl p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">
               Urgences & Sécurité
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <button className="flex items-center p-4 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded-xl transition-colors">
-                <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mr-4">
+              <button className="flex items-center space-x-3 p-3 glass-card rounded-xl transition-colors hover:scale-105">
+                <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
                   <Phone className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-left">
@@ -663,8 +796,8 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
               </button>
 
               {(healthData.providers || []).filter((p: any) => p.type === 'pediatrician').map((provider: any) => (
-                <button key={provider.id} className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 rounded-xl transition-colors">
-                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4">
+                <button key={provider.id} className="flex items-center space-x-3 p-3 glass-card rounded-xl transition-colors hover:scale-105">
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
                     <Phone className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-left">
@@ -691,7 +824,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6">
+        <div className="glass-card rounded-2xl max-w-lg w-full p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Prendre la température
@@ -742,7 +875,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 flex flex-col items-center">
+        <div className="glass-card rounded-2xl p-8 flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600 mb-4"></div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
             Enregistrement en cours...
@@ -763,7 +896,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
       onTouchEnd={onTouchEnd}
     >
       {/* Enhanced Tab Navigation */}
-      <div className="relative bg-white dark:bg-gray-800 rounded-2xl pt-6 pb-3 px-3 shadow-sm border border-gray-100 dark:border-gray-700" data-quick-nav>
+      <div className="relative glass-card rounded-2xl pt-6 pb-3 px-3" data-quick-nav>
         {/* Floating menu button */}
         <button
           onClick={() => setShowQuickNav(!showQuickNav)}
@@ -840,7 +973,7 @@ const HealthDashboard = ({ babyId }: HealthDashboardProps) => {
         
         {/* Quick navigation helper */}
         {showQuickNav && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 z-10">
+          <div className="absolute top-full left-0 right-0 mt-2 glass-card rounded-xl p-3 z-10">
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 text-center">
               Navigation rapide
             </div>

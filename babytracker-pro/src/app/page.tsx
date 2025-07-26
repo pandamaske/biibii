@@ -282,6 +282,14 @@ export default function HomePage() {
     }
   }
 
+  // Initialize staggered fade-in animations
+  useEffect(() => {
+    const items = document.querySelectorAll('.fade-in')
+    items.forEach((item, index) => {
+      (item as HTMLElement).style.animationDelay = `${index * 0.1}s`
+    })
+  }, [currentBaby, userProfile])
+
   // Initialize data and update current time
   useEffect(() => {
     // Clean up any old default user data from localStorage
@@ -613,7 +621,7 @@ export default function HomePage() {
         {/* Enhanced KPI Dashboard */}
         <div className="space-y-6">
           {/* Header with Baby Info */}
-          <div className="glass-card rounded-3xl p-6 text-center shadow-large animate-slide-up">
+          <div className="glass-card age-card fade-in rounded-3xl p-6 text-center shadow-large">
             <div className="text-4xl mb-3 animate-gentle-bounce">{currentBaby.avatar}</div>
             <h2 className="text-2xl font-bold text-primary-800 dark:text-primary-200">{currentBaby.name}</h2>
             <p className="text-primary-600 dark:text-primary-300">{growthStats.ageDisplay} • {currentTime.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
@@ -642,7 +650,7 @@ export default function HomePage() {
           {/* Main KPI Cards */}
           <div className="grid grid-cols-2 gap-4">
             {/* Feeding KPI */}
-            <div className="glass-card rounded-3xl p-6 shadow-large card-hover">
+            <div className="glass-card glass-card-vaccine fade-in rounded-3xl p-6 shadow-large card-hover">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full p-2">
@@ -681,7 +689,7 @@ export default function HomePage() {
             </div>
 
             {/* Sleep KPI */}
-            <div className="glass-card rounded-3xl p-6 shadow-large card-hover">
+            <div className="glass-card glass-card-vaccine fade-in rounded-3xl p-6 shadow-large card-hover">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="bg-purple-100 dark:bg-purple-900/30 rounded-full p-2">
@@ -720,7 +728,7 @@ export default function HomePage() {
             </div>
 
             {/* Diaper KPI */}
-            <div className="glass-card rounded-3xl p-6 shadow-large card-hover">
+            <div className="glass-card glass-card-vaccine fade-in rounded-3xl p-6 shadow-large card-hover">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="bg-green-100 dark:bg-green-900/30 rounded-full p-2">
@@ -761,7 +769,7 @@ export default function HomePage() {
             </div>
 
             {/* Growth KPI */}
-            <div className="glass-card rounded-3xl p-6 shadow-large card-hover">
+            <div className="glass-card glass-card-vaccine fade-in rounded-3xl p-6 shadow-large card-hover">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="bg-orange-100 dark:bg-orange-900/30 rounded-full p-2">
@@ -780,11 +788,11 @@ export default function HomePage() {
               
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
-                  <div className="text-center bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
+                  <div className="text-center glass-card rounded-lg p-2">
                     <div className="font-semibold">Poids</div>
                     <div>{(growthStats.weight / 1000).toFixed(1)}kg</div>
                   </div>
-                  <div className="text-center bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
+                  <div className="text-center glass-card rounded-lg p-2">
                     <div className="font-semibold">Taille</div>
                     <div>{growthStats.height}cm</div>
                   </div>
@@ -801,7 +809,7 @@ export default function HomePage() {
         </div>
 
         {/* Smart Insights & Recommendations */}
-        <div className="glass-card rounded-3xl p-6 shadow-large border border-gray-100 dark:border-gray-700">
+        <div className="glass-card glass-card-vaccine fade-in rounded-3xl p-6 shadow-large">
           <h3 className="font-bold mb-4 flex items-center space-x-2">
             <Zap className="w-5 h-5 text-yellow-500" />
             <span>Aperçus intelligents</span>
@@ -950,7 +958,7 @@ export default function HomePage() {
 
         {/* Recent Activity */}
         {(todayFeedings.length > 0 || todaySleeps.length > 0) && (
-          <div className="glass-card rounded-3xl p-6 shadow-large border border-gray-100 animate-slide-up">
+          <div className="glass-card glass-card-vaccine fade-in rounded-3xl p-6 shadow-large">
             <h3 className="font-bold mb-4 flex items-center space-x-2">
               <Clock className="w-5 h-5 " />
               <span>Activité récente</span>
@@ -1005,7 +1013,7 @@ export default function HomePage() {
         )}
 
         {/* Quick Stats */}
-        <div className="glass-card rounded-3xl p-6 shadow-large border border-gray-100">
+        <div className="glass-card glass-card-vaccine fade-in rounded-3xl p-6 shadow-large">
           <h3 className="font-bold mb-4 flex items-center space-x-2">
             <Heart className="w-5 h-5 text-red-500" />
             <span>Résumé du jour</span>

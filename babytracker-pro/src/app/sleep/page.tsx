@@ -1009,10 +1009,10 @@ export default function SleepPage() {
                 })}
             </div>
           )}
-            </div>
+        </div>
 
-            {/* Sleep Analytics */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Sleep Analytics */}
+        <div className="grid grid-cols-2 gap-6 mt-6">
           <div className="bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/30 dark:to-blue-900/30 border border-cyan-200 dark:border-cyan-700 rounded-2xl p-4 card-hover">
             <h4 className="font-semibold text-cyan-800 dark:text-cyan-200 mb-2">Durée moyenne</h4>
             <div className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
@@ -1036,7 +1036,7 @@ export default function SleepPage() {
 
         {/* Sleep Tips */}
         {totalSleep < recommendedSleep * 0.7 && (
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border-2 border-amber-200 dark:border-amber-700 rounded-2xl p-4 animate-fade-in">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border-2 border-amber-200 dark:border-amber-700 rounded-2xl p-4 animate-fade-in mt-6">
             <div className="flex items-center space-x-3">
               <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400 animate-gentle-bounce" />
               <div>
@@ -1052,7 +1052,7 @@ export default function SleepPage() {
 
         {/* Sleep Achievement */}
         {totalSleep >= recommendedSleep && (
-          <div className="bg-gradient-to-r from-primary-50 to-emerald-50 dark:from-primary-900/30 dark:to-emerald-900/30 border-2 border-primary-200 dark:border-primary-700 rounded-2xl p-4 animate-fade-in">
+          <div className="bg-gradient-to-r from-primary-50 to-emerald-50 dark:from-primary-900/30 dark:to-emerald-900/30 border-2 border-primary-200 dark:border-primary-700 rounded-2xl p-4 animate-fade-in mt-6">
             <div className="flex items-center space-x-3">
               <Star className="w-6 h-6 text-primary-600 dark:text-primary-400 animate-gentle-bounce" />
               <div>

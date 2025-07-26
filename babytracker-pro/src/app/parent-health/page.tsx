@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useBabyTrackerStore } from '@/lib/store'
 import AppLayout from '@/components/layout/AppLayout'
 import BreathingExercise from '@/components/wellness/BreathingExercise'
-import { useLocalStorage, getLocalStorageItem } from '@/hooks/useLocalStorage'
 import { 
   Heart, Brain, Sunrise, Moon, Activity, Smile, Frown, Meh, 
   AlertCircle, CheckCircle, Clock, Target, BookOpen, Users,
@@ -271,9 +270,11 @@ export default function ParentHealthPage() {
     stress_factors: [],
     positive_moments: []
   })
+  const [moodHistory, setMoodHistory] = useState<any>({})
+  const [isEditingExisting, setIsEditingExisting] = useState(false)
   
-  const [recoveryProgress, setRecoveryProgress] = useLocalStorage('parent-recovery-progress', {})
-  const [selfCareGoals, setSelfCareGoals] = useLocalStorage('parent-selfcare-goals', {})
+  const [recoveryProgress, setRecoveryProgress] = useState({})
+  const [selfCareGoals, setSelfCareGoals] = useState({})
   const [activeView, setActiveView] = useState('dashboard')
   const [showResourceModal, setShowResourceModal] = useState(false)
   const [selectedResource, setSelectedResource] = useState(null)
@@ -287,6 +288,55 @@ export default function ParentHealthPage() {
     if (userProfile?.email) {
       loadRecoveryProgress()
       loadSelfCareGoals()
+      loadMoodHistory()
+    }
+  }, [userProfile?.email])
+
+  // ✅ Load mood history from database
+  const loadMoodHistory = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/parent-health/mood?userEmail=${encodeURIComponent(userProfile?.email || '')}`)
+      if (response.ok) {
+        const data = await response.json()
+        const moodData: any = {}
+        
+        // Process mental health data
+        if (data.data?.mentalHealth) {
+          data.data.mentalHealth.forEach((mental: any) => {
+            const date = new Date(mental.date).toISOString().split('T')[0]
+            moodData[date] = {
+              date: mental.date,
+              anxietyLevel: mental.anxietyLevel,
+              riskLevel: mental.riskLevel,
+              moodEntries: mental.moodEntries || []
+            }
+          })
+        }
+        
+        setMoodHistory(moodData)
+        
+        // Load today's entry if it exists
+        const today = new Date().toISOString().split('T')[0]
+        if (moodData[today] && moodData[today].moodEntries.length > 0) {
+          const todayEntry = moodData[today].moodEntries[0]
+          setCurrentMoodEntry({
+            energy: moodData[today].energyLevel || 3,
+            mood: todayEntry.mood === 'excellent' ? 5 : 
+                  todayEntry.mood === 'good' ? 4 : 
+                  todayEntry.mood === 'okay' ? 3 : 
+                  todayEntry.mood === 'low' ? 2 : 1,
+            stress: todayEntry.anxietyLevel || 3,
+            confidence: 3, // Default as not stored separately
+            notes: todayEntry.notes || '',
+            sleep_hours: 7, // Default as calculated from recovery data
+            stress_factors: todayEntry.stressFactors || [],
+            positive_moments: todayEntry.copingStrategies || []
+          })
+          setIsEditingExisting(true)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading mood history:', error)
     }
   }, [userProfile?.email])
 
@@ -313,6 +363,35 @@ export default function ParentHealthPage() {
       console.error('Error loading self-care goals:', error)
     }
   }
+
+  // ✅ Psychological trend analysis with clinical insights
+  const analyzeWellbeingTrends = useCallback((moodData: any) => {
+    const recent7Days = Object.entries(moodData)
+      .filter(([date]) => {
+        const entryDate = new Date(date)
+        const weekAgo = new Date()
+        weekAgo.setDate(weekAgo.getDate() - 7)
+        return entryDate >= weekAgo
+      })
+      .map(([_, data]) => data)
+
+    if (recent7Days.length >= 3) {
+      const avgMood = recent7Days.reduce((sum: number, day: any) => sum + (day as any).mood, 0) / recent7Days.length
+      const avgEnergy = recent7Days.reduce((sum: number, day: any) => sum + (day as any).energy, 0) / recent7Days.length
+      const avgStress = recent7Days.reduce((sum: number, day: any) => sum + (day as any).stress, 0) / recent7Days.length
+      
+      // ✅ Clinical risk assessment
+      if (avgMood <= 2 && avgEnergy <= 2) {
+        generateAlert('depression_risk', 'Signes de détresse émotionnelle détectés')
+      }
+      if (avgStress >= 4) {
+        generateAlert('high_stress', 'Niveau de stress élevé persistant')
+      }
+      
+      // ✅ Generate personalized recommendations
+      console.log('Wellbeing analysis:', { avgMood, avgEnergy, avgStress })
+    }
+  }, [])
 
   // ✅ Save mood entry with psychological insights
   const saveMoodEntry = useCallback(async () => {
@@ -341,55 +420,22 @@ export default function ParentHealthPage() {
         const data = await response.json()
         console.log('Mood entry saved:', data)
         
-        // Also save to localStorage for offline access
-        const today = new Date().toISOString().split('T')[0]
-        const moodData = getLocalStorageItem('parent-mood-data', {})
+        // ✅ Trigger analysis and recommendations based on database data
+        analyzeWellbeingTrends(moodHistory)
         
-        (moodData as any)[today] = {
-          ...currentMoodEntry,
-          timestamp: new Date().toISOString(),
-          baby_age_weeks: currentBaby ? Math.floor((new Date().getTime() - new Date((currentBaby as any).birthDate).getTime()) / (1000 * 60 * 60 * 24 * 7)) : 0
-        }
+        // ✅ Refresh mood history after saving
+        await loadMoodHistory()
         
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('parent-mood-data', JSON.stringify(moodData))
-        }
+        // Reset editing state
+        setIsEditingExisting(false)
         
-        // ✅ Trigger analysis and recommendations
-        analyzeWellbeingTrends(moodData)
       } else {
         console.error('Failed to save mood entry')
       }
     } catch (error) {
       console.error('Error saving mood entry:', error)
     }
-  }, [currentMoodEntry, currentBaby, userProfile?.email])
-
-  // ✅ Psychological trend analysis with clinical insights
-  const analyzeWellbeingTrends = (moodData: any) => {
-    const recent7Days = Object.entries(moodData)
-      .filter(([date]) => {
-        const entryDate = new Date(date)
-        const weekAgo = new Date()
-        weekAgo.setDate(weekAgo.getDate() - 7)
-        return entryDate >= weekAgo
-      })
-      .map(([_, data]) => data)
-
-    if (recent7Days.length >= 3) {
-      const avgMood = recent7Days.reduce((sum: number, day: any) => sum + (day as any).mood, 0) / recent7Days.length
-      const avgEnergy = recent7Days.reduce((sum: number, day: any) => sum + (day as any).energy, 0) / recent7Days.length
-      const avgStress = recent7Days.reduce((sum: number, day: any) => sum + (day as any).stress, 0) / recent7Days.length
-      
-      // ✅ Clinical risk assessment
-      if (avgMood <= 2 && avgEnergy <= 2) {
-        generateAlert('depression_risk', 'Signes de détresse émotionnelle détectés')
-      }
-      if (avgStress >= 4) {
-        generateAlert('high_stress', 'Niveau de stress élevé persistant')
-      }
-    }
-  }
+  }, [currentMoodEntry, currentBaby, userProfile?.email, analyzeWellbeingTrends, loadMoodHistory])
 
   const generateAlert = (type: string, message: string) => {
     // Integration with notification system
@@ -414,6 +460,10 @@ export default function ParentHealthPage() {
       
       if (response.ok) {
         console.log('Recovery progress saved')
+        // Update local state to reflect saved data
+        setRecoveryProgress(newProgress)
+      } else {
+        console.error('Failed to save recovery progress')
       }
     } catch (error) {
       console.error('Error saving recovery progress:', error)
@@ -438,6 +488,10 @@ export default function ParentHealthPage() {
       
       if (response.ok) {
         console.log('Self-care goals saved')
+        // Update local state to reflect saved data
+        setSelfCareGoals(newGoals)
+      } else {
+        console.error('Failed to save self-care goals')
       }
     } catch (error) {
       console.error('Error saving self-care goals:', error)
@@ -478,7 +532,7 @@ export default function ParentHealthPage() {
         {Object.entries(MOOD_SCALES).map(([key, scale]) => {
           const IconComponent = scale.icon
           return (
-            <div key={key} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <div key={key} className="glass-card rounded-2xl p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <IconComponent className="w-6 h-6 text-purple-500" />
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
@@ -512,22 +566,146 @@ export default function ParentHealthPage() {
         })}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+      <div className="glass-card rounded-2xl p-6">
         <h3 className="text-lg font-semibold mb-4">Notes et réflexions</h3>
         <textarea
           value={currentMoodEntry.notes}
           onChange={(e) => setCurrentMoodEntry(prev => ({ ...prev, notes: e.target.value }))}
           placeholder="Comment vous sentez-vous aujourd'hui ? Qu'est-ce qui influence votre humeur ?"
-          className="w-full h-32 p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 resize-none"
+          className="w-full h-32 p-3 rounded-xl border border-gray-300 dark:border-gray-600 glass-card resize-none"
         />
         
-        <button
-          onClick={saveMoodEntry}
-          className="mt-4 bg-purple-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-purple-600 transition-colors flex items-center space-x-2"
-        >
-          <Save className="w-5 h-5" />
-          <span>Enregistrer l'entrée</span>
-        </button>
+        <div className="flex items-center space-x-4 mt-4">
+          <button
+            onClick={saveMoodEntry}
+            className={`px-6 py-3 rounded-xl font-semibold transition-colors flex items-center space-x-2 ${
+              isEditingExisting 
+                ? 'bg-amber-500 hover:bg-amber-600 text-white' 
+                : 'bg-purple-500 hover:bg-purple-600 text-white'
+            }`}
+          >
+            <Save className="w-5 h-5" />
+            <span>{isEditingExisting ? 'Modifier l\'entrée' : 'Enregistrer l\'entrée'}</span>
+          </button>
+          
+          {isEditingExisting && (
+            <button
+              onClick={() => {
+                setCurrentMoodEntry({
+                  energy: 3,
+                  mood: 3,
+                  stress: 3,
+                  confidence: 3,
+                  notes: '',
+                  sleep_hours: 7,
+                  stress_factors: [],
+                  positive_moments: []
+                })
+                setIsEditingExisting(false)
+              }}
+              className="px-4 py-3 rounded-xl font-semibold bg-gray-500 hover:bg-gray-600 text-white transition-colors flex items-center space-x-2"
+            >
+              <X className="w-4 h-4" />
+              <span>Nouvelle entrée</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Mood History Section */}
+      <div className="glass-card rounded-2xl p-6">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center space-x-2">
+          <BarChart3 className="w-6 h-6 text-purple-500" />
+          <span>Historique des entrées</span>
+        </h3>
+        
+        <div className="space-y-4 max-h-96 overflow-y-auto">
+          {Object.entries(moodHistory)
+            .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
+            .slice(0, 10)
+            .map(([date, data]: [string, any]) => (
+              <div 
+                key={date}
+                className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-700"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="w-5 h-5 text-purple-600" />
+                    <span className="font-semibold text-gray-800 dark:text-gray-200">
+                      {new Date(date).toLocaleDateString('fr-FR', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </span>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      if (data.moodEntries && data.moodEntries.length > 0) {
+                        const entry = data.moodEntries[0]
+                        setCurrentMoodEntry({
+                          energy: data.energyLevel || 3,
+                          mood: entry.mood === 'excellent' ? 5 : 
+                                entry.mood === 'good' ? 4 : 
+                                entry.mood === 'okay' ? 3 : 
+                                entry.mood === 'low' ? 2 : 1,
+                          stress: entry.anxietyLevel || 3,
+                          confidence: 3,
+                          notes: entry.notes || '',
+                          sleep_hours: 7,
+                          stress_factors: entry.stressFactors || [],
+                          positive_moments: entry.copingStrategies || []
+                        })
+                        setSelectedMoodDate(date)
+                        setIsEditingExisting(true)
+                      }
+                    }}
+                    className="px-3 py-1 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center space-x-1 text-sm"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span>Modifier</span>
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <Smile className="w-4 h-4 text-green-500" />
+                    <span>Humeur: {data.moodEntries?.[0]?.mood || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-orange-500" />
+                    <span>Stress: {data.anxietyLevel || 'N/A'}/5</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Shield className="w-4 h-4 text-blue-500" />
+                    <span>Risque: {data.riskLevel || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <span>{new Date(data.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+                
+                {data.moodEntries?.[0]?.notes && (
+                  <div className="mt-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      <strong>Notes:</strong> {data.moodEntries[0].notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          
+          {Object.keys(moodHistory).length === 0 && (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <Brain className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Aucune entrée d'humeur enregistrée</p>
+              <p className="text-sm">Commencez par enregistrer votre première entrée ci-dessus</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -549,7 +727,7 @@ export default function ParentHealthPage() {
         {Object.entries(SELF_CARE_DOMAINS).map(([domainKey, domain]) => {
           const IconComponent = domain.icon
           return (
-            <div key={domainKey} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <div key={domainKey} className="glass-card rounded-2xl p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <IconComponent className={`w-6 h-6 text-${domain.color}-500`} />
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
@@ -559,7 +737,7 @@ export default function ParentHealthPage() {
               
               <div className="space-y-3">
                 {domain.goals.map((goal) => (
-                  <div key={goal.id} className="border border-gray-200 dark:border-gray-600 rounded-xl p-3">
+                  <div key={goal.id} className="glass-card rounded-xl p-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
                         {goal.name}
@@ -571,7 +749,7 @@ export default function ParentHealthPage() {
                             (newGoals as any)[goal.id] = { completed: false, streak: 0 }
                           }
                           (newGoals as any)[goal.id].completed = !(newGoals as any)[goal.id].completed
-                          setSelfCareGoals(newGoals)
+                          // Save to database (which will update local state on success)
                           saveSelfCareGoals(newGoals)
                         }}
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
@@ -616,14 +794,14 @@ export default function ParentHealthPage() {
       </h2>
 
       {Object.entries(EXPERT_RESOURCES).map(([categoryKey, category]) => (
-        <div key={categoryKey} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+        <div key={categoryKey} className="glass-card rounded-2xl p-6">
           <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
             {category.name}
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {category.items.map((item, index) => (
-              <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 hover:shadow-md transition-shadow">
+              <div key={index} className="glass-card rounded-xl p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
@@ -695,7 +873,7 @@ export default function ParentHealthPage() {
   // ✅ Render comprehensive dashboard
   const renderDashboard = () => {
     const today = new Date().toISOString().split('T')[0]
-    const todayMood = (getLocalStorageItem('parent-mood-data', {}) as any)[today] || null
+    const todayMood = moodHistory[today] || null
     
     return (
       <div className="space-y-6">
@@ -706,7 +884,13 @@ export default function ParentHealthPage() {
               <div>
                 <p className="text-purple-100 text-sm">Humeur du jour</p>
                 <p className="text-2xl font-bold">
-                  {todayMood ? `${todayMood.mood}/5` : 'Non renseigné'}
+                  {todayMood?.moodEntries?.[0]?.mood ? 
+                    `${todayMood.moodEntries[0].mood === 'excellent' ? '5' : 
+                       todayMood.moodEntries[0].mood === 'good' ? '4' : 
+                       todayMood.moodEntries[0].mood === 'okay' ? '3' : 
+                       todayMood.moodEntries[0].mood === 'low' ? '2' : '1'}/5` : 
+                    'Non renseigné'
+                  }
                 </p>
               </div>
               <Heart className="w-8 h-8 text-purple-200" />
@@ -741,7 +925,17 @@ export default function ParentHealthPage() {
               <div>
                 <p className="text-amber-100 text-sm">Bien-être global</p>
                 <p className="text-2xl font-bold">
-                  {todayMood ? Math.round((todayMood.energy + todayMood.mood + (6 - todayMood.stress) + todayMood.confidence) / 4 * 20) : '?'}%
+                  {todayMood?.moodEntries?.[0] ? 
+                    Math.round((
+                      3 + // energy (default)
+                      (todayMood.moodEntries[0].mood === 'excellent' ? 5 : 
+                       todayMood.moodEntries[0].mood === 'good' ? 4 : 
+                       todayMood.moodEntries[0].mood === 'okay' ? 3 : 
+                       todayMood.moodEntries[0].mood === 'low' ? 2 : 1) + 
+                      (6 - (todayMood.anxietyLevel || 3)) + 
+                      3 // confidence (default)
+                    ) / 4 * 20) + '%' : '?%'
+                  }
                 </p>
               </div>
               <Sunrise className="w-8 h-8 text-amber-200" />
@@ -750,14 +944,14 @@ export default function ParentHealthPage() {
         </div>
 
         {/* Today's priorities */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+        <div className="glass-card rounded-2xl p-6">
           <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
             Priorités du jour
           </h3>
           
           <div className="space-y-3">
             {!todayMood && (
-              <div className="flex items-center space-x-3 p-3 bg-purple-50 border border-purple-200 rounded-xl">
+              <div className="flex items-center space-x-3 p-3 glass-card rounded-xl">
                 <Heart className="w-5 h-5 text-purple-500" />
                 <div className="flex-1">
                   <span className="font-medium text-purple-800">Renseigner votre humeur</span>
@@ -773,7 +967,7 @@ export default function ParentHealthPage() {
             )}
             
             {calculateRecoveryScore.critical < 100 && (
-              <div className="flex items-center space-x-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <div className="flex items-center space-x-3 p-3 glass-card rounded-xl">
                 <AlertCircle className="w-5 h-5 text-red-500" />
                 <div className="flex-1">
                   <span className="font-medium text-red-800">Éléments critiques de récupération</span>
@@ -796,7 +990,7 @@ export default function ParentHealthPage() {
         </div>
 
         {/* Quick actions */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+        <div className="glass-card rounded-2xl p-6">
           <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
             Actions rapides
           </h3>
@@ -853,7 +1047,7 @@ export default function ParentHealthPage() {
           const progress = Math.round((completedItems.length / category.items.length) * 100)
           
           return (
-            <div key={categoryKey} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <div key={categoryKey} className="glass-card rounded-2xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <IconComponent className={`w-6 h-6 text-${category.color}-500`} />
@@ -874,7 +1068,7 @@ export default function ParentHealthPage() {
                       onClick={() => {
                         const newProgress: any = { ...(recoveryProgress as any) }
                         newProgress[item.id] = !newProgress[item.id]
-                        setRecoveryProgress(newProgress)
+                        // Save to database (which will update local state on success)
                         saveRecoveryProgress(newProgress)
                       }}
                       className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
@@ -915,13 +1109,12 @@ export default function ParentHealthPage() {
 
   return (
     <AppLayout 
-      className="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-blue-900/20"
       currentPage="Santé Parentale"
       showHeader={true}
     >
       <div className="p-4 pb-24 space-y-6">
         {/* Enhanced Tab Navigation */}
-        <div className="relative bg-white dark:bg-gray-800 rounded-2xl pt-6 pb-3 px-3 shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="relative glass-card rounded-2xl pt-6 pb-3 px-3">
           <div className="flex overflow-x-auto space-x-2 scrollbar-hide">
             {[
               { key: 'dashboard', label: 'Tableau de bord', icon: BarChart3 },
