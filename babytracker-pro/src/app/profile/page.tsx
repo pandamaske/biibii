@@ -119,21 +119,7 @@ export default function ProfilePage() {
     isLoading
   } = useBabyTrackerStore()
 
-  useEffect(() => {
-    // Get email from localStorage (set by homepage)
-    const storedEmail = typeof window !== 'undefined' ? localStorage.getItem('user-email') : null
-    
-    if (storedEmail) {
-      console.log('Profile page loading for email:', storedEmail)
-      initializeProfile(storedEmail)
-    } else {
-      console.log('No email found, redirecting to homepage')
-      window.location.href = '/'
-      return
-    }
-    
-    initializeData()
-  }, [initializeData, initializeProfile])
+
 
  useEffect(() => {
     if (familyMembers.length === 0) {

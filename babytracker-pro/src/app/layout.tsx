@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import DataInitializer from '@/components/DataInitializer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -59,6 +60,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <ThemeProvider>
+          <DataInitializer />
           {children}
         </ThemeProvider>
       </body>

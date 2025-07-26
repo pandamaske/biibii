@@ -292,38 +292,9 @@ export default function HomePage() {
 
   // Initialize data and update current time
   useEffect(() => {
-    // Clean up any old default user data from localStorage
-    const storedEmail = typeof window !== 'undefined' ? localStorage.getItem('user-email') : null
-    if (storedEmail === 'nouveau.utilisateur@example.com') {
-      console.log('Clearing old default user data')
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('user-email')
-        // Clear the entire babytracker storage to reset to clean state
-        localStorage.removeItem('babytracker-storage')
-        // Force page reload to start completely fresh
-        window.location.reload()
-      }
-      return
-    }
-    
-    // Check if there's a stored email and try to load profile
-    const validStoredEmail = typeof window !== 'undefined' ? localStorage.getItem('user-email') : null
-    if (validStoredEmail && validStoredEmail !== 'nouveau.utilisateur@example.com') {
-      console.log('Found stored email, trying to load profile:', validStoredEmail)
-      setEmail(validStoredEmail)
-      // Initialize profile with the stored email
-      initializeProfile(validStoredEmail)
-    } else {
-      console.log('No stored email found, will show email entry screen')
-      // Initialize without email - this will set loading to false and profile to null
-      initializeProfile()
-    }
-    
-    initializeData()
-    
-    const timer = setInterval(() => setCurrentTime(new Date()), 30000) // ✅ Moins fréquent
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000)
     return () => clearInterval(timer)
-  }, [initializeData, initializeProfile])
+  }, [])
 
   // Show loading screen while checking for user profile
   if (isLoading) {
